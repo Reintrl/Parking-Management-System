@@ -1,4 +1,4 @@
-package com.tms.smartparkingsystem;
+package com.tms.ParkingManagementSystem;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;

@@ -1,4 +1,4 @@
-package com.tms.smartparkingsystem;
+package com.tms.ParkingManagementSystem;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
