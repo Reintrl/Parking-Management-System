@@ -14,6 +14,7 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -35,10 +36,12 @@ public class ParkingLot {
     private Long id;
 
     @NotBlank(message = "Parking lot name must not be blank")
+    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     @Column(nullable = false)
     private String name;
 
     @NotBlank(message = "Parking lot address must not be blank")
+    @Size(min = 2, max = 50, message = "Address must be between 2 and 50 characters")
     @Column(nullable = false, unique = true)
     private String address;
 
