@@ -5,7 +5,6 @@ import com.tms.ParkingManagementSystem.model.dto.UserCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.UserStatusUpdateDto;
 import com.tms.ParkingManagementSystem.service.UserService;
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -53,22 +52,22 @@ public class UserController {
     public ResponseEntity<User> updateUser(
             @PathVariable Long id,
             @Valid @RequestBody UserCreateUpdateDto dto) {
-
         User updated = userService.updateUser(id, dto);
         return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        if (userService.deleteUserById(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
     @PatchMapping("/{id}/status")
     public ResponseEntity<User> changeStatus(
             @PathVariable Long id,
             @Valid @RequestBody UserStatusUpdateDto dto) {
-
         User updated = userService.changeStatus(id, dto.getStatus());
         return ResponseEntity.ok(updated);
     }

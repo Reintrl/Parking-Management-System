@@ -15,17 +15,13 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
-@Getter
-@Setter
-@ToString(exclude = {"vehicle", "spot"})
+@Data
 public class Reservation {
 
     @Id

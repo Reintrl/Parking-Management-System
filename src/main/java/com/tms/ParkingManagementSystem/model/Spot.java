@@ -15,15 +15,11 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import lombok.Data;
 
 @Entity
 @Table(name = "spots")
-@Getter
-@Setter
-@ToString(exclude = "parkingLot")
+@Data
 public class Spot {
 
     @Id

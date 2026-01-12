@@ -21,6 +21,15 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(VehicleNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(VehicleNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
+
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
@@ -38,6 +47,14 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(Map.of(
                 "error", "VALIDATION_ERROR",
                 "fields", fields
+        ));
+    }
+
+    @ExceptionHandler({PlateNumberAlreadyExistsException.class})
+    public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
         ));
     }
 }

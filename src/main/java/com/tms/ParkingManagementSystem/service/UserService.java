@@ -28,30 +28,30 @@ public class UserService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException(dto.getEmail());
         }
-        User u = new User();
-        u.setFirstName(dto.getFirstName());
-        u.setSecondName(dto.getSecondName());
-        u.setEmail(dto.getEmail());
-        u.setDisabledPermit(dto.getDisabledPermit());
-        u.setCreated(LocalDateTime.now());
-        u.setChanged(LocalDateTime.now());
-        return userRepository.save(u);
+        User user = new User();
+        user.setFirstName(dto.getFirstName());
+        user.setSecondName(dto.getSecondName());
+        user.setEmail(dto.getEmail());
+        user.setDisabledPermit(dto.getDisabledPermit());
+        user.setCreated(LocalDateTime.now());
+        user.setChanged(LocalDateTime.now());
+        return userRepository.save(user);
     }
 
     public User updateUser(Long id, UserCreateUpdateDto dto) {
-        User u = userRepository.findById(id)
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        if (!dto.getEmail().equals(u.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
+        if (!dto.getEmail().equals(user.getEmail()) && userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException(dto.getEmail());
         }
 
-        u.setFirstName(dto.getFirstName());
-        u.setSecondName(dto.getSecondName());
-        u.setEmail(dto.getEmail());
-        u.setDisabledPermit(dto.getDisabledPermit());
-        u.setChanged(LocalDateTime.now());
-        return userRepository.save(u);
+        user.setFirstName(dto.getFirstName());
+        user.setSecondName(dto.getSecondName());
+        user.setEmail(dto.getEmail());
+        user.setDisabledPermit(dto.getDisabledPermit());
+        user.setChanged(LocalDateTime.now());
+        return userRepository.save(user);
     }
 
 
@@ -59,9 +59,9 @@ public class UserService {
         return userRepository.findById(id);
     }
 
-    public boolean deleteUser(Long id) {
+    public boolean deleteUserById(Long id) {
         if (!userRepository.existsById(id)) {
-            return false;
+            throw new UserNotFoundException(id);
         }
         userRepository.deleteById(id);
         return true;

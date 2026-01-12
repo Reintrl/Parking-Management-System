@@ -9,19 +9,13 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-
+import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "users")
-@Getter
-@Setter
-@ToString
+@Data
 public class User {
-
     @Id
     @SequenceGenerator(
             name = "user_generator",
