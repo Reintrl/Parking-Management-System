@@ -1,19 +1,18 @@
 package com.tms.ParkingManagementSystem.model;
 
+import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tariffs")
@@ -29,27 +28,25 @@ public class Tariff {
     @GeneratedValue(generator = "tariff_generator")
     private Long id;
 
-    @NotBlank(message = "Tariff name must not be blank")
-    @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters")
     @Column(nullable = false, unique = true)
     private String name;
 
-    @NotNull(message = "Hour price must not be null")
-    @DecimalMin(value = "0.0", inclusive = false, message = "Hour price must be greater than 0")
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal hourPrice;
 
-    @NotNull(message = "Billing step minutes must not be null")
-    @Min(value = 1, message = "Billing step minutes must be greater than 0")
     @Column(nullable = false)
     private Integer billingStepMinutes;
 
-    @NotNull(message = "Free minutes must not be null")
-    @Min(value = 0, message = "Free minutes must be zero or positive")
     @Column(nullable = false)
-    private Integer freeMinutes = 0;
+    private Integer freeMinutes;
 
-    @NotNull(message = "Active flag must not be null")
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Boolean active = true;
+    private TariffStatus status = TariffStatus.ACTIVE;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime created;
+
+    @Column(nullable = false)
+    private LocalDateTime changed;
 }

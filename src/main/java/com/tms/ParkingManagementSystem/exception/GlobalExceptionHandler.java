@@ -29,6 +29,24 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(TariffNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(TariffNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
+
+    @ExceptionHandler(TariffNameAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(TariffNameAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
+
+
 
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(EmailAlreadyExistsException ex) {

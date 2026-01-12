@@ -1,0 +1,77 @@
+package com.tms.ParkingManagementSystem.service;
+
+import com.tms.ParkingManagementSystem.enums.TariffStatus;
+import com.tms.ParkingManagementSystem.enums.UserStatus;
+import com.tms.ParkingManagementSystem.exception.TariffNameAlreadyExistsException;
+import com.tms.ParkingManagementSystem.exception.TariffNotFoundException;
+import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
+import com.tms.ParkingManagementSystem.model.Tariff;
+import com.tms.ParkingManagementSystem.model.User;
+import com.tms.ParkingManagementSystem.model.dto.TariffCreateUpdateDto;
+import com.tms.ParkingManagementSystem.repository.TariffRepository;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+
+@Service
+public class TariffService {
+    private final TariffRepository tariffRepository;
+
+    TariffService(TariffRepository tariffRepository) {
+        this.tariffRepository = tariffRepository;
+    }
+
+    public List<Tariff> getAllTariffs() {
+        return tariffRepository.findAll();
+    }
+
+    public Optional<Tariff> getTariffById(Long id) {
+        return tariffRepository.findById(id);
+    }
+
+    public Tariff createTariff(TariffCreateUpdateDto tariffDto) {
+        if (tariffRepository.existsByName(tariffDto.getName())) {
+            throw new TariffNameAlreadyExistsException(tariffDto.getName());
+        }
+        Tariff tariff = new Tariff();
+        tariff.setName(tariffDto.getName());
+        tariff.setHourPrice(tariffDto.getHourPrice());
+        tariff.setFreeMinutes(tariffDto.getFreeMinutes());
+        tariff.setBillingStepMinutes(tariffDto.getBillingStepMinutes());
+        tariff.setCreated(LocalDateTime.now());
+        tariff.setChanged(LocalDateTime.now());
+        tariff.setStatus(TariffStatus.ACTIVE);
+        return tariffRepository.save(tariff);
+    }
+
+    public Tariff changeStatus(Long id, TariffStatus status) {
+        Tariff tariff = tariffRepository.findById(id)
+                .orElseThrow(() -> new TariffNotFoundException(id));
+
+        tariff.setStatus(status);
+        tariff.setChanged(LocalDateTime.now());
+        return tariffRepository.save(tariff);
+    }
+
+    public Tariff updateTariff(Long id, TariffCreateUpdateDto tariffDto) {
+        Tariff tariff = tariffRepository.findById(id)
+                .orElseThrow(() -> new TariffNotFoundException(id));
+        tariff.setName(tariffDto.getName());
+        tariff.setHourPrice(tariffDto.getHourPrice());
+        tariff.setFreeMinutes(tariffDto.getFreeMinutes());
+        tariff.setBillingStepMinutes(tariffDto.getBillingStepMinutes());
+        tariff.setChanged(LocalDateTime.now());
+        return tariffRepository.save(tariff);
+    }
+
+    public boolean deleteTariffById(Long id) {
+        if (tariffRepository.existsById(id)) {
+            tariffRepository.deleteById(id);
+            return true;
+        } else {
+            throw new TariffNotFoundException(id);
+        }
+    }
+}
