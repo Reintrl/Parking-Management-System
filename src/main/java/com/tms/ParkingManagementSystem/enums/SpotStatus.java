@@ -3,5 +3,6 @@ package com.tms.ParkingManagementSystem.enums;
 public enum SpotStatus {
     AVAILABLE,
     OCCUPIED,
-    OUT_OF_SERVICE
+    OUT_OF_SERVICE,
+    RESERVED
 }

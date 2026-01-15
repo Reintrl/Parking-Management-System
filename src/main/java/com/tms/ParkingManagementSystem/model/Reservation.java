@@ -13,8 +13,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -48,12 +48,12 @@ public class Reservation {
     private final Spot spot;
 
     @NotNull(message = "Reservation start time must not be null")
-    @PastOrPresent(message = "Reservation start time cannot be in the future")
+    @FutureOrPresent(message = "Reservation start time cannot be in the past")
     @Column(name = "start_time", nullable = false)
     private final LocalDateTime startTime;
 
     @NotNull(message = "Reservation end time must not be null")
-    @PastOrPresent(message = "Reservation end time cannot be in the future")
+    @FutureOrPresent(message = "Reservation end time cannot be in the past")
     @Column(name = "end_time", nullable = false)
     private LocalDateTime endTime;
 

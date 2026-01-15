@@ -8,11 +8,13 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.FutureOrPresent;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
@@ -22,7 +24,10 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "parking_sessions")
+@Table(name = "parking_sessions", indexes = {
+        @Index(name = "ix_sessions_spot_status", columnList = "spot_id, status"),
+        @Index(name = "ix_sessions_vehicle_status", columnList = "vehicle_id, status")
+})
 @Data
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor
@@ -52,7 +57,7 @@ public class ParkingSession {
     @Column(name = "start_time", nullable = false)
     private final LocalDateTime startTime;
 
-    @PastOrPresent(message = "End time cannot be in the future")
+    @FutureOrPresent(message = "End time cannot be in the past")
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
@@ -61,8 +66,22 @@ public class ParkingSession {
     @Column(nullable = false)
     private SessionStatus status = SessionStatus.ACTIVE;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "reservation_id")
+    private Reservation reservation;
+
     @AssertTrue(message = "End time must be after start time")
     private boolean isEndTimeValid() {
         return endTime == null || startTime == null || endTime.isAfter(startTime);
+    }
+
+    @AssertTrue(message = "Finished session must have end time")
+    private boolean isFinishedHasEndTime() {
+        return status != SessionStatus.FINISHED || endTime != null;
+    }
+
+    @AssertTrue(message = "Active session must not have end time")
+    private boolean isActiveHasNoEndTime() {
+        return status != SessionStatus.ACTIVE || endTime == null;
     }
 }
