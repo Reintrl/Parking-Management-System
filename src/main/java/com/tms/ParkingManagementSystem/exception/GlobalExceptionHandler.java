@@ -107,6 +107,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ReservationNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(SpotNumberAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(SpotNumberAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
@@ -122,4 +130,13 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         ));
     }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, Object>> handleBadRequest(IllegalArgumentException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of(
+                "error", "BAD_REQUEST",
+                "message", ex.getMessage()
+        ));
+    }
+
 }
