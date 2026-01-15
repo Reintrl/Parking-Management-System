@@ -43,11 +43,10 @@ public class VehicleService {
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new UserNotFoundException(dto.getUserId()));
 
-        Vehicle newVehicle = new Vehicle();
+        Vehicle newVehicle = new Vehicle(LocalDateTime.now());
         newVehicle.setPlateNumber(dto.getPlateNumber());
         newVehicle.setType(dto.getType());
         newVehicle.setUser(user);
-        newVehicle.setCreated(LocalDateTime.now());
         newVehicle.setChanged(LocalDateTime.now());
 
         return vehicleRepository.save(newVehicle);

@@ -16,12 +16,16 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "parking_sessions")
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class ParkingSession {
 
     @Id
@@ -36,17 +40,17 @@ public class ParkingSession {
     @NotNull(message = "Vehicle must be specified")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+    private final Vehicle vehicle;
 
     @NotNull(message = "Spot must be specified")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "spot_id", nullable = false)
-    private Spot spot;
+    private final Spot spot;
 
     @NotNull(message = "Start time must not be null")
     @PastOrPresent(message = "Start time cannot be in the future")
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private final LocalDateTime startTime;
 
     @PastOrPresent(message = "End time cannot be in the future")
     @Column(name = "end_time")

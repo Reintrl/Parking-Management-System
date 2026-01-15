@@ -13,12 +13,16 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "vehicles")
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class Vehicle {
 
     @Id
@@ -42,7 +46,7 @@ public class Vehicle {
     private User user;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime created;
+    private final LocalDateTime created;
 
     @Column(nullable = false)
     private LocalDateTime changed;

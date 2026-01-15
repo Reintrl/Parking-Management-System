@@ -16,12 +16,16 @@ import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PastOrPresent;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class Reservation {
 
     @Id
@@ -36,17 +40,17 @@ public class Reservation {
     @NotNull(message = "Vehicle must be specified")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "vehicle_id", nullable = false)
-    private Vehicle vehicle;
+    private final Vehicle vehicle;
 
     @NotNull(message = "Spot must be specified")
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "spot_id", nullable = false)
-    private Spot spot;
+    private final Spot spot;
 
     @NotNull(message = "Reservation start time must not be null")
     @PastOrPresent(message = "Reservation start time cannot be in the future")
     @Column(name = "start_time", nullable = false)
-    private LocalDateTime startTime;
+    private final LocalDateTime startTime;
 
     @NotNull(message = "Reservation end time must not be null")
     @PastOrPresent(message = "Reservation end time cannot be in the future")
@@ -58,14 +62,14 @@ public class Reservation {
     @Column(nullable = false)
     private ReservationStatus status = ReservationStatus.ACTIVE;
 
+    @Column(nullable = false, updatable = false)
+    private final LocalDateTime created;
+
+    @Column(nullable = false)
+    private LocalDateTime changed;
+
     @AssertTrue(message = "Reservation end time must be after start time")
     private boolean isReservationTimeValid() {
         return startTime == null || endTime == null || endTime.isAfter(startTime);
     }
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime created;
-
-    @Column(nullable = false)
-    private LocalDateTime changed;
 }

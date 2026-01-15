@@ -55,7 +55,6 @@ public class GlobalExceptionHandler {
     }
 
 
-
     @ExceptionHandler(EmailAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(EmailAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
@@ -71,6 +70,7 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         ));
     }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fields = new HashMap<>();
@@ -83,8 +83,32 @@ public class GlobalExceptionHandler {
         ));
     }
 
-    @ExceptionHandler({PlateNumberAlreadyExistsException.class})
+    @ExceptionHandler(PlateNumberAlreadyExistsException.class)
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(ParkingLotNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ParkingLotNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(SpotNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(SpotNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(SpotNumberAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(SpotNumberAlreadyExistsException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "error", "CONFLICT",
                 "message", ex.getMessage()

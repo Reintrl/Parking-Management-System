@@ -10,6 +10,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -17,6 +19,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "tariffs")
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class Tariff {
 
     @Id
@@ -45,7 +49,7 @@ public class Tariff {
     private TariffStatus status = TariffStatus.ACTIVE;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime created;
+    private final LocalDateTime created;
 
     @Column(nullable = false)
     private LocalDateTime changed;

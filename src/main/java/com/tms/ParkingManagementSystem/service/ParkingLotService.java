@@ -42,11 +42,9 @@ public class ParkingLotService {
         Tariff tariff = tariffRepository.findById(dto.getTariffId())
                 .orElseThrow(() -> new TariffNotFoundException(dto.getTariffId()));
 
-        ParkingLot parkingLot = new ParkingLot();
-        parkingLot.setAddress(dto.getAddress());
+        ParkingLot parkingLot = new ParkingLot(dto.getAddress(),LocalDateTime.now());
         parkingLot.setTariff(tariff);
         parkingLot.setName(dto.getName());
-        parkingLot.setCreated(LocalDateTime.now());
         parkingLot.setChanged(LocalDateTime.now());
         return parkingLotRepository.save(parkingLot);
     }
@@ -66,7 +64,6 @@ public class ParkingLotService {
 
         parkingLot.setTariff(tariffFromUpdate.get());
         parkingLot.setName(dto.getName());
-        parkingLot.setAddress(dto.getAddress());
         parkingLot.setChanged(LocalDateTime.now());
 
         return parkingLotRepository.save(parkingLot);

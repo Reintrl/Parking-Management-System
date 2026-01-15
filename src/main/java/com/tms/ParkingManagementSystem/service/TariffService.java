@@ -33,12 +33,11 @@ public class TariffService {
         if (tariffRepository.existsByName(tariffDto.getName())) {
             throw new TariffNameAlreadyExistsException(tariffDto.getName());
         }
-        Tariff tariff = new Tariff();
+        Tariff tariff = new Tariff(LocalDateTime.now());
         tariff.setName(tariffDto.getName());
         tariff.setHourPrice(tariffDto.getHourPrice());
         tariff.setFreeMinutes(tariffDto.getFreeMinutes());
         tariff.setBillingStepMinutes(tariffDto.getBillingStepMinutes());
-        tariff.setCreated(LocalDateTime.now());
         tariff.setChanged(LocalDateTime.now());
         tariff.setStatus(TariffStatus.ACTIVE);
         return tariffRepository.save(tariff);

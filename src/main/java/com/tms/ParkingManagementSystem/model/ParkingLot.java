@@ -13,12 +13,16 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "parking_lots")
 @Data
+@NoArgsConstructor(force = true)
+@RequiredArgsConstructor
 public class ParkingLot {
 
     @Id
@@ -34,7 +38,7 @@ public class ParkingLot {
     private String name;
 
     @Column(nullable = false, unique = true)
-    private String address;
+    private final String address;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -45,7 +49,7 @@ public class ParkingLot {
     private Tariff tariff;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime created;
+    private final LocalDateTime created;
 
     @Column(nullable = false)
     private LocalDateTime changed;

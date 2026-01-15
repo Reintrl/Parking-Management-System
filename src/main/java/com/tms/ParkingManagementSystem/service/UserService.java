@@ -32,12 +32,11 @@ public class UserService {
         if (userRepository.existsByEmail(dto.getEmail())) {
             throw new EmailAlreadyExistsException(dto.getEmail());
         }
-        User user = new User();
+        User user = new User(LocalDateTime.now());
         user.setFirstName(dto.getFirstName());
         user.setSecondName(dto.getSecondName());
         user.setEmail(dto.getEmail());
         user.setDisabledPermit(dto.getDisabledPermit());
-        user.setCreated(LocalDateTime.now());
         user.setChanged(LocalDateTime.now());
         return userRepository.save(user);
     }
