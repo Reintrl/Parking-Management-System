@@ -48,15 +48,6 @@ public class TariffService {
         return tariffRepository.save(tariff);
     }
 
-    public Tariff changeStatus(Long id, TariffStatus status) {
-        Tariff tariff = tariffRepository.findById(id)
-                .orElseThrow(() -> new TariffNotFoundException(id));
-
-        tariff.setStatus(status);
-        tariff.setChanged(LocalDateTime.now());
-        return tariffRepository.save(tariff);
-    }
-
     public Tariff updateTariff(Long id, TariffCreateUpdateDto tariffDto) {
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new TariffNotFoundException(id));

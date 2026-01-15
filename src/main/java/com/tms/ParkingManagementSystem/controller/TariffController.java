@@ -55,14 +55,6 @@ public class TariffController {
         return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<Tariff> changeStatus(
-            @PathVariable Long id,
-            @Valid @RequestBody TariffStatusUpdateDto dto) {
-        Tariff updated = tariffService.changeStatus(id, dto.getStatus());
-        return ResponseEntity.ok(updated);
-    }
-
     @PutMapping("/{id}")
     public ResponseEntity<Tariff> updateTariff(
             @PathVariable Long id,
