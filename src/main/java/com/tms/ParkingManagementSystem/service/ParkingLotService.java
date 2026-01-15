@@ -1,6 +1,5 @@
 package com.tms.ParkingManagementSystem.service;
 
-import com.tms.ParkingManagementSystem.enums.ParkingStatus;
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import com.tms.ParkingManagementSystem.exception.AddressAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.ParkingLotNotFoundException;
