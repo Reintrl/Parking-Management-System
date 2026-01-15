@@ -14,6 +14,8 @@ import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "vehicles")
 @Data
@@ -35,7 +37,13 @@ public class Vehicle {
     @Column(nullable = false)
     private VehicleType type = VehicleType.CAR;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime created;
+
+    @Column(nullable = false)
+    private LocalDateTime changed;
 }

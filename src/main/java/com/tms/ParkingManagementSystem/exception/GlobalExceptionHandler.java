@@ -29,6 +29,14 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(UserVehicleNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(UserVehicleNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
     @ExceptionHandler(TariffNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNotFound(TariffNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
@@ -56,6 +64,13 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(AddressAlreadyExistsException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(AddressAlreadyExistsException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, String> fields = new HashMap<>();

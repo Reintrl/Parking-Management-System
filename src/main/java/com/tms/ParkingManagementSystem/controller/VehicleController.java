@@ -1,7 +1,7 @@
 package com.tms.ParkingManagementSystem.controller;
 
+import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.VehicleCreateUpdateDto;
-import com.tms.ParkingManagementSystem.model.dto.VehicleResponseDto;
 import com.tms.ParkingManagementSystem.service.VehicleService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,8 +21,8 @@ public class VehicleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<VehicleResponseDto>> getAllVehicles() {
-        List<VehicleResponseDto> vehicles = vehicleService.getAllVehicles();
+    public ResponseEntity<List<Vehicle>> getAllVehicles() {
+        List<Vehicle> vehicles = vehicleService.getAllVehicles();
         if (vehicles.isEmpty()) {
             return ResponseEntity.notFound().build();
         }
@@ -30,21 +30,21 @@ public class VehicleController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<VehicleResponseDto> getVehicleById(@PathVariable Long id) {
-        VehicleResponseDto vehicle = vehicleService.getVehicleById(id);
+    public ResponseEntity<Vehicle> getVehicleById(@PathVariable Long id) {
+        Vehicle vehicle = vehicleService.getVehicleById(id);
         return ResponseEntity.ok(vehicle);
     }
 
     @PostMapping
-    public ResponseEntity<VehicleResponseDto> createVehicle(
+    public ResponseEntity<Vehicle> createVehicle(
             @Valid @RequestBody VehicleCreateUpdateDto dto) {
 
-        VehicleResponseDto created = vehicleService.createVehicle(dto);
+        Vehicle created = vehicleService.createVehicle(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<VehicleResponseDto> updateVehicle(
+    public ResponseEntity<Vehicle> updateVehicle(
             @PathVariable Long id,
             @Valid @RequestBody VehicleCreateUpdateDto dto) {
 
@@ -60,10 +60,10 @@ public class VehicleController {
     }
 
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<VehicleResponseDto>> getAllVehicleByUserId(
+    public ResponseEntity<List<Vehicle>> getAllVehicleByUserId(
             @PathVariable Long userId) {
 
-        List<VehicleResponseDto> vehicles = vehicleService.getAllVehicleByUserId(userId);
+        List<Vehicle> vehicles = vehicleService.getAllVehicleByUserId(userId);
 
         if (vehicles.isEmpty()) {
             return ResponseEntity.noContent().build();

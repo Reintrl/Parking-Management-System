@@ -1,12 +1,10 @@
 package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
-import com.tms.ParkingManagementSystem.enums.UserStatus;
+import com.tms.ParkingManagementSystem.exception.PlateNumberAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.TariffNameAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.TariffNotFoundException;
-import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
 import com.tms.ParkingManagementSystem.model.Tariff;
-import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.dto.TariffCreateUpdateDto;
 import com.tms.ParkingManagementSystem.repository.TariffRepository;
 import org.springframework.stereotype.Service;
@@ -58,6 +56,12 @@ public class TariffService {
     public Tariff updateTariff(Long id, TariffCreateUpdateDto tariffDto) {
         Tariff tariff = tariffRepository.findById(id)
                 .orElseThrow(() -> new TariffNotFoundException(id));
+
+        if (!tariffDto.getName().equals(tariff.getName())
+                && tariffRepository.existsByName(tariffDto.getName())) {
+            throw new PlateNumberAlreadyExistsException(tariffDto.getName());
+        }
+
         tariff.setName(tariffDto.getName());
         tariff.setHourPrice(tariffDto.getHourPrice());
         tariff.setFreeMinutes(tariffDto.getFreeMinutes());

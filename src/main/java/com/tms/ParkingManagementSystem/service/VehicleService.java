@@ -6,13 +6,12 @@ import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.VehicleCreateUpdateDto;
-import com.tms.ParkingManagementSystem.model.dto.VehicleResponseDto;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class VehicleService {
@@ -26,20 +25,17 @@ public class VehicleService {
         this.userRepository = userRepository;
     }
 
-    public List<VehicleResponseDto> getAllVehicles() {
-        return vehicleRepository.findAll()
-                .stream()
-                .map(this::toDto)
-                .toList();
+    public List<Vehicle> getAllVehicles() {
+        return vehicleRepository.findAll();
     }
 
-    public VehicleResponseDto getVehicleById(Long id) {
+    public Vehicle getVehicleById(Long id) {
         Vehicle vehicle = vehicleRepository.findById(id)
                 .orElseThrow(() -> new VehicleNotFoundException(id));
-        return toDto(vehicle);
+        return vehicle;
     }
 
-    public VehicleResponseDto createVehicle(VehicleCreateUpdateDto dto) {
+    public Vehicle createVehicle(VehicleCreateUpdateDto dto) {
         if (vehicleRepository.existsByPlateNumber(dto.getPlateNumber())) {
             throw new PlateNumberAlreadyExistsException(dto.getPlateNumber());
         }
@@ -51,11 +47,13 @@ public class VehicleService {
         newVehicle.setPlateNumber(dto.getPlateNumber());
         newVehicle.setType(dto.getType());
         newVehicle.setUser(user);
+        newVehicle.setCreated(LocalDateTime.now());
+        newVehicle.setChanged(LocalDateTime.now());
 
-        return toDto(vehicleRepository.save(newVehicle));
+        return vehicleRepository.save(newVehicle);
     }
 
-    public VehicleResponseDto updateVehicle(Long id, VehicleCreateUpdateDto dto) {
+    public Vehicle updateVehicle(Long id, VehicleCreateUpdateDto dto) {
         Vehicle vehicleForUpdate = vehicleRepository.findById(id)
                 .orElseThrow(() -> new VehicleNotFoundException(id));
 
@@ -70,8 +68,9 @@ public class VehicleService {
         vehicleForUpdate.setPlateNumber(dto.getPlateNumber());
         vehicleForUpdate.setType(dto.getType());
         vehicleForUpdate.setUser(user);
+        vehicleForUpdate.setChanged(LocalDateTime.now());
 
-        return toDto(vehicleRepository.save(vehicleForUpdate));
+        return vehicleRepository.save(vehicleForUpdate);
     }
 
     public boolean deleteVehicleById(Long id) {
@@ -82,25 +81,12 @@ public class VehicleService {
         return true;
     }
 
-    private VehicleResponseDto toDto(Vehicle vehicle) {
-        return new VehicleResponseDto(
-                vehicle.getId(),
-                vehicle.getPlateNumber(),
-                vehicle.getType(),
-                vehicle.getUser().getId()
-        );
-    }
 
-    public List<VehicleResponseDto> getAllVehicleByUserId(Long userId) {
+    public List<Vehicle> getAllVehicleByUserId(Long userId) {
         if (!userRepository.existsById(userId)) {
             throw new UserNotFoundException(userId);
         }
 
-        return vehicleRepository.findAllByUserId(userId)
-                .stream()
-                .map(this::toDto)
-                .toList();
+        return vehicleRepository.findAllByUserId(userId);
     }
-
-
 }

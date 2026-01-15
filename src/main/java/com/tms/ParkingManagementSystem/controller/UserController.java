@@ -68,7 +68,7 @@ public class UserController {
     public ResponseEntity<User> changeStatus(
             @PathVariable Long id,
             @Valid @RequestBody UserStatusUpdateDto dto) {
-        User updated = userService.changeStatus(id, dto.getStatus());
+        User updated = userService.changeStatus(id, dto);
         return ResponseEntity.ok(updated);
     }
 }

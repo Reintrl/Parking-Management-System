@@ -62,4 +62,10 @@ public class Reservation {
     private boolean isReservationTimeValid() {
         return startTime == null || endTime == null || endTime.isAfter(startTime);
     }
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime created;
+
+    @Column(nullable = false)
+    private LocalDateTime changed;
 }

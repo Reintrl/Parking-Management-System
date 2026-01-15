@@ -1,10 +1,8 @@
 package com.tms.ParkingManagementSystem.controller;
 
 import com.tms.ParkingManagementSystem.model.Tariff;
-import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.dto.TariffCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.TariffStatusUpdateDto;
-import com.tms.ParkingManagementSystem.model.dto.UserStatusUpdateDto;
 import com.tms.ParkingManagementSystem.service.TariffService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;

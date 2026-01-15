@@ -1,11 +1,13 @@
 package com.tms.ParkingManagementSystem.service;
 
-import com.tms.ParkingManagementSystem.enums.UserStatus;
 import com.tms.ParkingManagementSystem.exception.EmailAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.dto.UserCreateUpdateDto;
+import com.tms.ParkingManagementSystem.model.dto.UserStatusUpdateDto;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
+import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -15,9 +17,11 @@ import java.util.Optional;
 @Service
 public class UserService {
     private final UserRepository userRepository;
+    private final VehicleRepository vehicleRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, VehicleRepository vehicleRepository) {
         this.userRepository = userRepository;
+        this.vehicleRepository = vehicleRepository;
     }
 
     public List<User> getAllUsers() {
@@ -59,19 +63,22 @@ public class UserService {
         return userRepository.findById(id);
     }
 
+    @Transactional
     public boolean deleteUserById(Long id) {
         if (!userRepository.existsById(id)) {
             throw new UserNotFoundException(id);
         }
+
+        vehicleRepository.deleteAllByUserId(id);
         userRepository.deleteById(id);
         return true;
     }
 
-    public User changeStatus(Long id, UserStatus status) {
+    public User changeStatus(Long id, UserStatusUpdateDto dto) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        user.setStatus(status);
+        user.setStatus(dto.getStatus());
         user.setChanged(LocalDateTime.now());
         return userRepository.save(user);
     }

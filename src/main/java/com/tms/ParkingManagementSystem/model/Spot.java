@@ -9,16 +9,27 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.validator.constraints.Range;
+
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "spots")
+@Table(name = "spots",
+        uniqueConstraints = {
+                @UniqueConstraint(name = "uk_spots_parking_lot_number", columnNames = {"parking_lot_id", "number"})
+        },
+        indexes = {
+                @Index(name = "ix_spots_parking_lot_id", columnList = "parking_lot_id")
+        })
 @Data
 public class Spot {
 
@@ -51,7 +62,13 @@ public class Spot {
     @JoinColumn(name = "parking_lot_id", nullable = false)
     private ParkingLot parkingLot;
 
-    @Min(value = 0, message = "Level must be zero or positive")
+    @Range(min = -3, max = 5, message = "Level must be between -3 and 5")
     @Column
     private Integer level;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime created;
+
+    @Column(nullable = false)
+    private LocalDateTime changed;
 }
