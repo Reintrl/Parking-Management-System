@@ -114,4 +114,12 @@ public class GlobalExceptionHandler {
                 "message", ex.getMessage()
         ));
     }
+
+    @ExceptionHandler(TariffInUseException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(TariffInUseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
 }

@@ -46,7 +46,7 @@ public class Tariff {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private TariffStatus status = TariffStatus.ACTIVE;
+    private TariffStatus status;
 
     @Column(nullable = false, updatable = false)
     private final LocalDateTime created;

@@ -2,10 +2,12 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import com.tms.ParkingManagementSystem.exception.PlateNumberAlreadyExistsException;
+import com.tms.ParkingManagementSystem.exception.TariffInUseException;
 import com.tms.ParkingManagementSystem.exception.TariffNameAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.TariffNotFoundException;
 import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.dto.TariffCreateUpdateDto;
+import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.TariffRepository;
 import org.springframework.stereotype.Service;
 
@@ -16,9 +18,12 @@ import java.util.Optional;
 @Service
 public class TariffService {
     private final TariffRepository tariffRepository;
+    private final ParkingLotRepository parkingLotRepository;
 
-    TariffService(TariffRepository tariffRepository) {
+    TariffService(TariffRepository tariffRepository,
+                  ParkingLotRepository parkingLotRepository) {
         this.tariffRepository = tariffRepository;
+        this.parkingLotRepository = parkingLotRepository;
     }
 
     public List<Tariff> getAllTariffs() {
@@ -39,7 +44,7 @@ public class TariffService {
         tariff.setFreeMinutes(tariffDto.getFreeMinutes());
         tariff.setBillingStepMinutes(tariffDto.getBillingStepMinutes());
         tariff.setChanged(LocalDateTime.now());
-        tariff.setStatus(TariffStatus.ACTIVE);
+        tariff.setStatus(TariffStatus.INACTIVE);
         return tariffRepository.save(tariff);
     }
 
@@ -70,11 +75,15 @@ public class TariffService {
     }
 
     public boolean deleteTariffById(Long id) {
-        if (tariffRepository.existsById(id)) {
-            tariffRepository.deleteById(id);
-            return true;
-        } else {
+        if (!tariffRepository.existsById(id)) {
             throw new TariffNotFoundException(id);
         }
+
+        if (parkingLotRepository.existsByTariffId(id)) {
+            throw new TariffInUseException(id);
+        }
+
+        tariffRepository.deleteById(id);
+        return true;
     }
 }
