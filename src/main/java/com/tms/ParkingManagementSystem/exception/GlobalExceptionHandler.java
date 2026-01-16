@@ -139,4 +139,28 @@ public class GlobalExceptionHandler {
         ));
     }
 
+    @ExceptionHandler(ParkingSessionNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(ParkingSessionNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of(
+                "error", "NOT_FOUND",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(ParkingSessionConflictException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(ParkingSessionConflictException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
+
+    @ExceptionHandler(ReservationInUseException.class)
+    public ResponseEntity<Map<String, Object>> handleConflict(ReservationInUseException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "CONFLICT",
+                "message", ex.getMessage()
+        ));
+    }
+
 }

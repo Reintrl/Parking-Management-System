@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
+import com.tms.ParkingManagementSystem.exception.ReservationInUseException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
@@ -11,6 +12,7 @@ import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.ReservationCreateDto;
 import com.tms.ParkingManagementSystem.model.dto.ReservationStatusUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.ReservationUpdateDto;
+import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
@@ -26,20 +28,38 @@ public class ReservationService {
     private final ReservationRepository reservationRepository;
     private final VehicleRepository vehicleRepository;
     private final SpotRepository spotRepository;
+    private final ParkingSessionRepository parkingSessionRepository;
 
     public ReservationService(ReservationRepository reservationRepository,
                               VehicleRepository vehicleRepository,
-                              SpotRepository spotRepository) {
+                              SpotRepository spotRepository,
+                              ParkingSessionRepository parkingSessionRepository) {
         this.reservationRepository = reservationRepository;
         this.vehicleRepository = vehicleRepository;
         this.spotRepository = spotRepository;
+        this.parkingSessionRepository = parkingSessionRepository;
+    }
+
+    private void expireOutdatedReservations() {
+        List<Reservation> outdated = reservationRepository
+                .findByStatusAndEndTimeBefore(ReservationStatus.ACTIVE, LocalDateTime.now());
+
+        if (!outdated.isEmpty()) {
+            for (Reservation r : outdated) {
+                r.setStatus(ReservationStatus.EXPIRED);
+                r.setChanged(LocalDateTime.now());
+            }
+            reservationRepository.saveAll(outdated);
+        }
     }
 
     public List<Reservation> getAllReservations() {
+        expireOutdatedReservations();
         return reservationRepository.findAll();
     }
 
     public Optional<Reservation> getReservationById(Long id) {
+        expireOutdatedReservations();
         return reservationRepository.findById(id);
     }
 
@@ -70,31 +90,22 @@ public class ReservationService {
             );
         }
 
-        Reservation reservation = new Reservation(
-                vehicle,
-                spot,
-                dto.getStartTime(),
-                LocalDateTime.now()
-        );
-
+        Reservation reservation = new Reservation(vehicle, spot, dto.getStartTime(), LocalDateTime.now());
         reservation.setEndTime(dto.getEndTime());
-        reservation.setStatus(ReservationStatus.ACTIVE);
         reservation.setChanged(LocalDateTime.now());
 
         return reservationRepository.save(reservation);
     }
 
     public Reservation updateReservation(Long id, ReservationUpdateDto dto) {
+        expireOutdatedReservations();
+
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
-        if (dto.getEndTime() != null && reservation.getStartTime() != null
-                && !dto.getEndTime().isAfter(reservation.getStartTime())) {
+        if (!dto.getEndTime().isAfter(reservation.getStartTime())) {
             throw new IllegalArgumentException("Reservation end time must be after start time");
         }
-
-        reservation.setEndTime(dto.getEndTime());
-        reservation.setChanged(LocalDateTime.now());
 
         boolean hasOverlap = reservationRepository
                 .existsBySpotIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
@@ -110,10 +121,14 @@ public class ReservationService {
             );
         }
 
+        reservation.setEndTime(dto.getEndTime());
+        reservation.setChanged(LocalDateTime.now());
         return reservationRepository.save(reservation);
     }
 
     public Reservation changeStatus(Long id, ReservationStatusUpdateDto dto) {
+        expireOutdatedReservations();
+
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
@@ -126,11 +141,18 @@ public class ReservationService {
         if (!reservationRepository.existsById(id)) {
             throw new ReservationNotFoundException(id);
         }
+
+        if (parkingSessionRepository.existsByReservationId(id)) {
+            throw new ReservationInUseException(id);
+        }
+
         reservationRepository.deleteById(id);
         return true;
     }
 
     public List<Reservation> getReservationsByVehicleId(Long vehicleId) {
+        expireOutdatedReservations();
+
         if (!vehicleRepository.existsById(vehicleId)) {
             throw new VehicleNotFoundException(vehicleId);
         }
@@ -138,6 +160,8 @@ public class ReservationService {
     }
 
     public List<Reservation> getReservationsBySpotId(Long spotId) {
+        expireOutdatedReservations();
+
         if (!spotRepository.existsById(spotId)) {
             throw new SpotNotFoundException(spotId);
         }
