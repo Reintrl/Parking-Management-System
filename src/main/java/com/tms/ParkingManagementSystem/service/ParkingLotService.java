@@ -12,35 +12,46 @@ import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.TariffRepository;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
+@Slf4j
 @Service
 public class ParkingLotService {
+
     private final ParkingLotRepository parkingLotRepository;
     private final TariffRepository tariffRepository;
     private final SpotRepository spotRepository;
 
-    public ParkingLotService(ParkingLotRepository parkingLotRepository, TariffRepository tariffRepository, SpotRepository spotRepository) {
+    public ParkingLotService(
+            ParkingLotRepository parkingLotRepository,
+            TariffRepository tariffRepository,
+            SpotRepository spotRepository) {
+
         this.parkingLotRepository = parkingLotRepository;
         this.tariffRepository = tariffRepository;
         this.spotRepository = spotRepository;
     }
 
     public List<ParkingLot> getAllParkingLots() {
+        log.info("Get all parking lots");
         return parkingLotRepository.findAll();
     }
 
     public ParkingLot getParkingLotById(Long id) {
+        log.info("Get parking lot by id = {}", id);
         return parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
     }
 
     @Transactional
     public ParkingLot createParkingLot(ParkingLotCreateUpdateDto dto) {
+        log.info("Create parking lot");
+        log.debug("Create parking lot payload = {}", dto);
+
         if (parkingLotRepository.existsParkingLotByAddress(dto.getAddress())) {
             throw new AddressAlreadyExistsException(dto.getAddress());
         }
@@ -48,19 +59,27 @@ public class ParkingLotService {
         Tariff tariff = tariffRepository.findById(dto.getTariffId())
                 .orElseThrow(() -> new TariffNotFoundException(dto.getTariffId()));
 
-        ParkingLot parkingLot = new ParkingLot(dto.getAddress(), LocalDateTime.now());
         if (tariff.getStatus() == TariffStatus.INACTIVE) {
             tariff.setStatus(TariffStatus.ACTIVE);
             tariffRepository.save(tariff);
+            log.info("Tariff activated, tariffId = {}", tariff.getId());
         }
+
+        ParkingLot parkingLot = new ParkingLot(dto.getAddress(), LocalDateTime.now());
         parkingLot.setTariff(tariff);
         parkingLot.setName(dto.getName());
         parkingLot.setChanged(LocalDateTime.now());
-        return parkingLotRepository.save(parkingLot);
+
+        ParkingLot saved = parkingLotRepository.save(parkingLot);
+
+        log.info("Parking lot created, id = {}", saved.getId());
+        return saved;
     }
 
     @Transactional
     public ParkingLot updateParkingLot(Long id, ParkingLotCreateUpdateDto dto) {
+        log.info("Update parking lot, id = {}", id);
+        log.debug("Update parking lot payload = {}", dto);
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
@@ -71,6 +90,7 @@ public class ParkingLotService {
 
         if (newTariff.getStatus() == TariffStatus.INACTIVE) {
             newTariff.setStatus(TariffStatus.ACTIVE);
+            log.info("Tariff activated, tariffId = {}", newTariff.getId());
         }
 
         parkingLot.setTariff(newTariff);
@@ -82,23 +102,32 @@ public class ParkingLotService {
         if (!newTariff.getId().equals(oldTariff.getId())
                 && parkingLotRepository.countByTariffId(oldTariff.getId()) == 0) {
             oldTariff.setStatus(TariffStatus.INACTIVE);
+            log.info("Old tariff deactivated, tariffId = {}", oldTariff.getId());
         }
 
+        log.info("Parking lot updated, id = {}", saved.getId());
         return saved;
     }
 
-
+    @Transactional
     public ParkingLot changeStatus(Long id, ParkingLotUpdateStatusDto dto) {
+        log.info("Change parking lot status, id = {}, status = {}", id, dto.getStatus());
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
         parkingLot.setStatus(dto.getStatus());
         parkingLot.setChanged(LocalDateTime.now());
-        return parkingLotRepository.save(parkingLot);
+
+        ParkingLot saved = parkingLotRepository.save(parkingLot);
+
+        log.info("Parking lot status changed, id = {}", id);
+        return saved;
     }
 
     @Transactional
     public Boolean deleteParkingLotById(Long id) {
+        log.info("Delete parking lot, id = {}", id);
+
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
@@ -106,11 +135,15 @@ public class ParkingLotService {
 
         spotRepository.deleteAllByParkingLotId(id);
         parkingLotRepository.delete(parkingLot);
+
         if (!parkingLotRepository.existsByTariffId(oldTariff.getId())) {
             oldTariff.setStatus(TariffStatus.INACTIVE);
             tariffRepository.save(oldTariff);
+
+            log.info("Tariff deactivated, tariffId = {}", oldTariff.getId());
         }
 
+        log.info("Parking lot deleted, id = {}", id);
         return true;
     }
 }

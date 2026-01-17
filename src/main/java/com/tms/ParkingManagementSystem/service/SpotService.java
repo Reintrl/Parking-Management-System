@@ -10,11 +10,13 @@ import com.tms.ParkingManagementSystem.model.dto.SpotStatusUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.SpotUpdateDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class SpotService {
 
@@ -28,15 +30,21 @@ public class SpotService {
     }
 
     public List<Spot> getAllSpots() {
+        log.info("Get all spots");
         return spotRepository.findAll();
     }
 
     public Spot getSpotById(Long id) {
+        log.info("Get spot by id = {}", id);
+
         return spotRepository.findById(id)
                 .orElseThrow(() -> new SpotNotFoundException(id));
     }
 
     public Spot createSpot(SpotCreateDto dto) {
+        log.info("Create spot");
+        log.debug("Create spot payload = {}", dto);
+
         ParkingLot parkingLot = parkingLotRepository.findById(dto.getParkingLotId())
                 .orElseThrow(() -> new ParkingLotNotFoundException(dto.getParkingLotId()));
 
@@ -48,42 +56,69 @@ public class SpotService {
         spot.setType(dto.getType());
         spot.setChanged(LocalDateTime.now());
 
-        return spotRepository.save(spot);
+        Spot saved = spotRepository.save(spot);
+
+        log.info("Spot created, id = {}, parkingLotId = {}, number = {}",
+                saved.getId(), parkingLot.getId(), saved.getNumber());
+
+        return saved;
     }
 
-
     public Spot updateSpot(Long id, SpotUpdateDto dto) {
+        log.info("Update spot, id = {}", id);
+        log.debug("Update spot payload = {}", dto);
+
         Spot spotForUpdate = spotRepository.findById(id)
                 .orElseThrow(() -> new SpotNotFoundException(id));
 
         spotForUpdate.setType(dto.getType());
         spotForUpdate.setChanged(LocalDateTime.now());
 
-        return spotRepository.save(spotForUpdate);
+        Spot saved = spotRepository.save(spotForUpdate);
+
+        log.info("Spot updated, id = {}", saved.getId());
+        return saved;
     }
 
-
     public Spot changeStatus(Long id, SpotStatusUpdateDto dto) {
+        log.info("Change spot status, id = {}, status = {}", id, dto.getStatus());
+        log.debug("Change spot status payload = {}", dto);
+
         Spot spot = spotRepository.findById(id)
                 .orElseThrow(() -> new SpotNotFoundException(id));
 
         spot.setStatus(dto.getStatus());
         spot.setChanged(LocalDateTime.now());
-        return spotRepository.save(spot);
+
+        Spot saved = spotRepository.save(spot);
+
+        log.info("Spot status changed, id = {}", saved.getId());
+        return saved;
     }
 
     public boolean deleteSpotById(Long id) {
+        log.info("Delete spot, id = {}", id);
+
         if (!spotRepository.existsById(id)) {
             throw new SpotNotFoundException(id);
         }
+
         spotRepository.deleteById(id);
+
+        log.info("Spot deleted, id = {}", id);
         return true;
     }
 
     public List<Spot> getSpotsByParkingLotId(Long parkingLotId) {
+        log.info("Get spots by parkingLotId = {}", parkingLotId);
+
         if (!parkingLotRepository.existsById(parkingLotId)) {
             throw new ParkingLotNotFoundException(parkingLotId);
         }
-        return spotRepository.findByParkingLotId(parkingLotId);
+
+        List<Spot> spots = spotRepository.findByParkingLotId(parkingLotId);
+
+        log.info("Found {} spots for parkingLotId = {}", spots.size(), parkingLotId);
+        return spots;
     }
 }

@@ -16,11 +16,13 @@ import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 public class ReservationService {
 
@@ -43,27 +45,44 @@ public class ReservationService {
         List<Reservation> outdated = reservationRepository
                 .findByStatusAndEndTimeBefore(ReservationStatus.ACTIVE, LocalDateTime.now());
 
-        if (!outdated.isEmpty()) {
-            for (Reservation r : outdated) {
-                r.setStatus(ReservationStatus.EXPIRED);
-                r.setChanged(LocalDateTime.now());
-            }
-            reservationRepository.saveAll(outdated);
+        if (outdated.isEmpty()) {
+            return;
         }
+
+        for (Reservation r : outdated) {
+            r.setStatus(ReservationStatus.EXPIRED);
+            r.setChanged(LocalDateTime.now());
+        }
+
+        reservationRepository.saveAll(outdated);
+
+        log.info("Expired outdated reservations, count = {}", outdated.size());
     }
 
     public List<Reservation> getAllReservations() {
+        log.info("Get all reservations");
+
         expireOutdatedReservations();
-        return reservationRepository.findAll();
+
+        List<Reservation> reservations = reservationRepository.findAll();
+        log.info("Found {} reservations", reservations.size());
+
+        return reservations;
     }
 
     public Reservation getReservationById(Long id) {
+        log.info("Get reservation by id = {}", id);
+
         expireOutdatedReservations();
+
         return reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
     }
 
     public Reservation createReservation(ReservationCreateDto dto) {
+        log.info("Create reservation");
+        log.debug("Create reservation payload = {}", dto);
+
         Vehicle vehicle = vehicleRepository.findById(dto.getVehicleId())
                 .orElseThrow(() -> new VehicleNotFoundException(dto.getVehicleId()));
 
@@ -72,7 +91,7 @@ public class ReservationService {
 
         if (spot.getStatus() != SpotStatus.AVAILABLE) {
             throw new IllegalArgumentException(
-                    "Spot with id=" + spot.getId() + " is not available for reservation"
+                    "Spot with id = " + spot.getId() + " is not available for reservation"
             );
         }
 
@@ -86,7 +105,7 @@ public class ReservationService {
 
         if (hasOverlap) {
             throw new IllegalArgumentException(
-                    "Spot with id=" + spot.getId() + " already has an active reservation in this time range"
+                    "Spot with id = " + spot.getId() + " already has an active reservation in this time range"
             );
         }
 
@@ -94,10 +113,18 @@ public class ReservationService {
         reservation.setEndTime(dto.getEndTime());
         reservation.setChanged(LocalDateTime.now());
 
-        return reservationRepository.save(reservation);
+        Reservation saved = reservationRepository.save(reservation);
+
+        log.info("Reservation created, id = {}, vehicleId = {}, spotId = {}",
+                saved.getId(), vehicle.getId(), spot.getId());
+
+        return saved;
     }
 
     public Reservation updateReservation(Long id, ReservationUpdateDto dto) {
+        log.info("Update reservation, id = {}", id);
+        log.debug("Update reservation payload = {}", dto);
+
         expireOutdatedReservations();
 
         Reservation reservation = reservationRepository.findById(id)
@@ -123,10 +150,17 @@ public class ReservationService {
 
         reservation.setEndTime(dto.getEndTime());
         reservation.setChanged(LocalDateTime.now());
-        return reservationRepository.save(reservation);
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        log.info("Reservation updated, id = {}", saved.getId());
+        return saved;
     }
 
     public Reservation changeStatus(Long id, ReservationStatusUpdateDto dto) {
+        log.info("Change reservation status, id = {}, status = {}", id, dto.getStatus());
+        log.debug("Change reservation status payload = {}", dto);
+
         expireOutdatedReservations();
 
         Reservation reservation = reservationRepository.findById(id)
@@ -134,10 +168,16 @@ public class ReservationService {
 
         reservation.setStatus(dto.getStatus());
         reservation.setChanged(LocalDateTime.now());
-        return reservationRepository.save(reservation);
+
+        Reservation saved = reservationRepository.save(reservation);
+
+        log.info("Reservation status changed, id = {}", saved.getId());
+        return saved;
     }
 
     public boolean deleteReservationById(Long id) {
+        log.info("Delete reservation, id = {}", id);
+
         if (!reservationRepository.existsById(id)) {
             throw new ReservationNotFoundException(id);
         }
@@ -147,24 +187,38 @@ public class ReservationService {
         }
 
         reservationRepository.deleteById(id);
+
+        log.info("Reservation deleted, id = {}", id);
         return true;
     }
 
     public List<Reservation> getReservationsByVehicleId(Long vehicleId) {
+        log.info("Get reservations by vehicleId = {}", vehicleId);
+
         expireOutdatedReservations();
 
         if (!vehicleRepository.existsById(vehicleId)) {
             throw new VehicleNotFoundException(vehicleId);
         }
-        return reservationRepository.findByVehicleId(vehicleId);
+
+        List<Reservation> reservations = reservationRepository.findByVehicleId(vehicleId);
+        log.info("Found {} reservations for vehicleId = {}", reservations.size(), vehicleId);
+
+        return reservations;
     }
 
     public List<Reservation> getReservationsBySpotId(Long spotId) {
+        log.info("Get reservations by spotId = {}", spotId);
+
         expireOutdatedReservations();
 
         if (!spotRepository.existsById(spotId)) {
             throw new SpotNotFoundException(spotId);
         }
-        return reservationRepository.findBySpotId(spotId);
+
+        List<Reservation> reservations = reservationRepository.findBySpotId(spotId);
+        log.info("Found {} reservations for spotId = {}", reservations.size(), spotId);
+
+        return reservations;
     }
 }
