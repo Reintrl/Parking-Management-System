@@ -30,9 +30,8 @@ public class VehicleService {
     }
 
     public Vehicle getVehicleById(Long id) {
-        Vehicle vehicle = vehicleRepository.findById(id)
+        return vehicleRepository.findById(id)
                 .orElseThrow(() -> new VehicleNotFoundException(id));
-        return vehicle;
     }
 
     public Vehicle createVehicle(VehicleCreateUpdateDto dto) {

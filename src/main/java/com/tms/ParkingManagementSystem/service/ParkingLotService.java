@@ -34,8 +34,9 @@ public class ParkingLotService {
         return parkingLotRepository.findAll();
     }
 
-    public Optional<ParkingLot> getParkingLotById(Long id) {
-        return parkingLotRepository.findById(id);
+    public ParkingLot getParkingLotById(Long id) {
+        return parkingLotRepository.findById(id)
+                .orElseThrow(() -> new ParkingLotNotFoundException(id));
     }
 
     @Transactional

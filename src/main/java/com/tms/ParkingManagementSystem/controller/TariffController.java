@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/tariff")
@@ -38,11 +37,8 @@ public class TariffController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Tariff> getTariffById(@PathVariable Long id) {
-        Optional<Tariff> tariff = tariffService.getTariffById(id);
-        if (tariff.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(tariff.get());
+        Tariff tariff = tariffService.getTariffById(id);
+        return ResponseEntity.ok(tariff);
     }
 
     @PostMapping

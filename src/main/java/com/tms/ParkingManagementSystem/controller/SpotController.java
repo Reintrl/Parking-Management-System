@@ -42,11 +42,8 @@ public class SpotController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Spot> getSpotById(@PathVariable Long id) {
-        Optional<Spot> spot = spotService.getSpotById(id);
-        if (spot.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
-        return ResponseEntity.ok(spot.get());
+        Spot spot = spotService.getSpotById(id);
+        return ResponseEntity.ok(spot);
     }
 
     @PostMapping

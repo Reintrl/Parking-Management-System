@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class SpotService {
@@ -32,8 +31,9 @@ public class SpotService {
         return spotRepository.findAll();
     }
 
-    public Optional<Spot> getSpotById(Long id) {
-        return spotRepository.findById(id);
+    public Spot getSpotById(Long id) {
+        return spotRepository.findById(id)
+                .orElseThrow(() -> new SpotNotFoundException(id));
     }
 
     public Spot createSpot(SpotCreateDto dto) {

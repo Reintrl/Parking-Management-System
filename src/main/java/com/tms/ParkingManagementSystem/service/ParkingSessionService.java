@@ -3,6 +3,7 @@ package com.tms.ParkingManagementSystem.service;
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
+import com.tms.ParkingManagementSystem.exception.ParkingLotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.ParkingSessionConflictException;
 import com.tms.ParkingManagementSystem.exception.ParkingSessionNotFoundException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
@@ -22,7 +23,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ParkingSessionService {
@@ -46,8 +46,9 @@ public class ParkingSessionService {
         return parkingSessionRepository.findAll();
     }
 
-    public Optional<ParkingSession> getSessionById(Long id) {
-        return parkingSessionRepository.findById(id);
+    public ParkingSession getSessionById(Long id) {
+        return parkingSessionRepository.findById(id)
+                .orElseThrow(() -> new ParkingSessionNotFoundException(id));
     }
 
     @Transactional

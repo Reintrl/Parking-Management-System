@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/parkingLot")
@@ -40,11 +39,8 @@ public class ParkingLotController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ParkingLot> getParkingLotById(@PathVariable Long id) {
-        Optional<ParkingLot> parkingLot = parkingLotService.getParkingLotById(id);
-        if (parkingLot.isPresent()) {
-            return ResponseEntity.ok(parkingLot.get());
-        }
-        return ResponseEntity.notFound().build();
+        ParkingLot parkingLot = parkingLotService.getParkingLotById(id);
+        return ResponseEntity.ok(parkingLot);
     }
 
     @PostMapping

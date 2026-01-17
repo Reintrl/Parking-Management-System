@@ -32,11 +32,8 @@ public class ParkingSessionController {
 
     @GetMapping("/{id}")
     public ResponseEntity<ParkingSession> getSessionById(@PathVariable Long id) {
-        Optional<ParkingSession> session = parkingSessionService.getSessionById(id);
-        if (session.isPresent()) {
-            return ResponseEntity.ok(session.get());
-        }
-        return ResponseEntity.notFound().build();
+        ParkingSession session = parkingSessionService.getSessionById(id);
+        return ResponseEntity.ok(session);
     }
 
     @PostMapping

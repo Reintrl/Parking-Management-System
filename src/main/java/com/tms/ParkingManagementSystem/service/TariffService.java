@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class TariffService {
@@ -30,8 +29,9 @@ public class TariffService {
         return tariffRepository.findAll();
     }
 
-    public Optional<Tariff> getTariffById(Long id) {
-        return tariffRepository.findById(id);
+    public Tariff getTariffById(Long id) {
+        return tariffRepository.findById(id)
+                .orElseThrow(() -> new TariffNotFoundException(id));
     }
 
     public Tariff createTariff(TariffCreateUpdateDto tariffDto) {

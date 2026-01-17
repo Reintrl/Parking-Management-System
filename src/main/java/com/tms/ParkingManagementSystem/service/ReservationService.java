@@ -20,7 +20,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ReservationService {
@@ -58,9 +57,10 @@ public class ReservationService {
         return reservationRepository.findAll();
     }
 
-    public Optional<Reservation> getReservationById(Long id) {
+    public Reservation getReservationById(Long id) {
         expireOutdatedReservations();
-        return reservationRepository.findById(id);
+        return reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException(id));
     }
 
     public Reservation createReservation(ReservationCreateDto dto) {
