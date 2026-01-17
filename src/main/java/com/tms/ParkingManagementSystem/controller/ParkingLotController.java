@@ -25,7 +25,7 @@ import java.util.Optional;
 public class ParkingLotController {
     private final ParkingLotService parkingLotService;
 
-    ParkingLotController(ParkingLotService parkingLotService) {
+    public ParkingLotController(ParkingLotService parkingLotService) {
         this.parkingLotService = parkingLotService;
     }
 

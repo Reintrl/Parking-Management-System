@@ -24,7 +24,7 @@ public class ParkingLotService {
     private final TariffRepository tariffRepository;
     private final SpotRepository spotRepository;
 
-    ParkingLotService(ParkingLotRepository parkingLotRepository, TariffRepository tariffRepository, SpotRepository spotRepository) {
+    public ParkingLotService(ParkingLotRepository parkingLotRepository, TariffRepository tariffRepository, SpotRepository spotRepository) {
         this.parkingLotRepository = parkingLotRepository;
         this.tariffRepository = tariffRepository;
         this.spotRepository = spotRepository;

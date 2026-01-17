@@ -2,7 +2,6 @@ package com.tms.ParkingManagementSystem.controller;
 
 import com.tms.ParkingManagementSystem.model.ParkingSession;
 import com.tms.ParkingManagementSystem.model.dto.ParkingSessionCreateDto;
-import com.tms.ParkingManagementSystem.model.dto.ParkingSessionStatusUpdateDto;
 import com.tms.ParkingManagementSystem.service.ParkingSessionService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -34,7 +33,10 @@ public class ParkingSessionController {
     @GetMapping("/{id}")
     public ResponseEntity<ParkingSession> getSessionById(@PathVariable Long id) {
         Optional<ParkingSession> session = parkingSessionService.getSessionById(id);
-        return session.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+        if (session.isPresent()) {
+            return ResponseEntity.ok(session.get());
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @PostMapping
@@ -47,15 +49,6 @@ public class ParkingSessionController {
     public ResponseEntity<ParkingSession> createSessionFromReservation(@PathVariable Long reservationId) {
         ParkingSession created = parkingSessionService.createSessionFromReservation(reservationId);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
-    }
-
-    @PatchMapping("/{id}/status")
-    public ResponseEntity<ParkingSession> changeStatus(
-            @PathVariable Long id,
-            @Valid @RequestBody ParkingSessionStatusUpdateDto dto) {
-
-        ParkingSession updated = parkingSessionService.changeStatus(id, dto);
-        return ResponseEntity.ok(updated);
     }
 
     @DeleteMapping("/{id}")

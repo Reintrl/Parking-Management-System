@@ -13,7 +13,6 @@ import com.tms.ParkingManagementSystem.model.Reservation;
 import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.ParkingSessionCreateDto;
-import com.tms.ParkingManagementSystem.model.dto.ParkingSessionStatusUpdateDto;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
@@ -128,26 +127,6 @@ public class ParkingSessionService {
         dto.setSpotId(reservation.getSpot().getId());
 
         return createSession(dto);
-    }
-
-    @Transactional
-    public ParkingSession changeStatus(Long id, ParkingSessionStatusUpdateDto dto) {
-        ParkingSession session = parkingSessionRepository.findById(id)
-                .orElseThrow(() -> new ParkingSessionNotFoundException(id));
-
-        if (dto.getStatus() == SessionStatus.FINISHED) {
-            session.setStatus(SessionStatus.FINISHED);
-            session.setEndTime(dto.getEndTime() != null ? dto.getEndTime() : LocalDateTime.now());
-
-            Spot spot = session.getSpot();
-            spot.setStatus(SpotStatus.AVAILABLE);
-            spot.setChanged(LocalDateTime.now());
-            spotRepository.save(spot);
-
-            return parkingSessionRepository.save(session);
-        }
-
-        throw new ParkingSessionConflictException("Only transition to FINISHED is allowed");
     }
 
     public boolean deleteSessionById(Long id) {
