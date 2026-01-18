@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.controller;
 
 import com.tms.ParkingManagementSystem.model.ParkingLot;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateUpdateDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateWithSpotsDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotUpdateStatusDto;
 import com.tms.ParkingManagementSystem.service.ParkingLotService;
 import jakarta.validation.Valid;
@@ -92,4 +93,15 @@ public class ParkingLotController {
         log.info("Parking lot status updated id = {}", id);
         return ResponseEntity.ok(updated);
     }
+
+    @PostMapping("/with-spots")
+    public ResponseEntity<ParkingLot> createParkingLotWithSpots(
+            @Valid @RequestBody ParkingLotCreateWithSpotsDto dto) {
+
+        log.info("Request: create parking lot with bulk spots");
+        ParkingLot created = parkingLotService.createParkingLotWithSpots(dto);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
 }

@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
+import com.tms.ParkingManagementSystem.enums.SpotType;
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import com.tms.ParkingManagementSystem.exception.AddressAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.ParkingLotInUseException;
@@ -11,6 +12,7 @@ import com.tms.ParkingManagementSystem.model.ParkingLot;
 import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateUpdateDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateWithSpotsDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotUpdateStatusDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
@@ -176,4 +179,57 @@ public class ParkingLotService {
         log.info("Parking lot deleted, id = {}", id);
         return true;
     }
+
+    @Transactional
+    public ParkingLot createParkingLotWithSpots(ParkingLotCreateWithSpotsDto dto) {
+        log.info("Create parking lot with bulk spots");
+        log.debug("Create parking lot with spots payload = {}", dto);
+
+        ParkingLotCreateUpdateDto lotDto = dto.getParkingLot();
+        ParkingLot createdLot = createParkingLot(lotDto);
+
+        ParkingLotCreateWithSpotsDto.BulkSpotsCreateDto s = dto.getSpots();
+
+        if (s.getLevels().isEmpty()) {
+            throw new IllegalArgumentException("Levels must not be empty");
+        }
+        if (s.getTypes().isEmpty()) {
+            throw new IllegalArgumentException("Types must not be empty");
+        }
+
+        int count = s.getCount();
+        int startNumber = s.getStartNumber();
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<Spot> spots = new ArrayList<>(count);
+
+        for (int i = 0; i < count; i++) {
+            int number = startNumber + i;
+            Integer level = s.getLevels().get(i % s.getLevels().size());
+            SpotType type = s.getTypes().get(i % s.getTypes().size());
+
+            if (spotRepository.existsByParkingLotIdAndLevelAndNumber(createdLot.getId(), level, number)) {
+                log.warn("Bulk create denied: spot already exists, parkingLotId = {}, level = {}, number = {}",
+                        createdLot.getId(), level, number);
+                throw new IllegalArgumentException(
+                        "Spot already exists: parkingLotId=" + createdLot.getId() + ", level=" + level + ", number=" + number
+                );
+            }
+
+            Spot spot = new Spot(number, createdLot, level, LocalDateTime.now());
+            spot.setType(type);
+            spot.setChanged(now);
+
+            spots.add(spot);
+        }
+
+        spotRepository.saveAll(spots);
+
+        log.info("Parking lot created with spots, parkingLotId = {}, spotsCreated = {}",
+                createdLot.getId(), spots.size());
+
+        return createdLot;
+    }
+
 }

@@ -11,4 +11,5 @@ public interface SpotRepository extends JpaRepository<Spot,Long> {
     boolean existsByParkingLotIdAndNumber(Long parkingLotId, Integer number);
     List<Spot> findByParkingLotId(Long parkingLotId);
     void deleteAllByParkingLotId(Long parkingLotId);
+    boolean existsByParkingLotIdAndLevelAndNumber(Long parkingLotId, Integer level, Integer number);
 }
