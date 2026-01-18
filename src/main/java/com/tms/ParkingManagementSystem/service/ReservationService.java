@@ -2,6 +2,9 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
+import com.tms.ParkingManagementSystem.enums.SpotType;
+import com.tms.ParkingManagementSystem.enums.UserStatus;
+import com.tms.ParkingManagementSystem.enums.VehicleType;
 import com.tms.ParkingManagementSystem.exception.ReservationConflictException;
 import com.tms.ParkingManagementSystem.exception.ReservationInUseException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
@@ -9,6 +12,7 @@ import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
 import com.tms.ParkingManagementSystem.model.Reservation;
 import com.tms.ParkingManagementSystem.model.Spot;
+import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.ReservationCreateDto;
 import com.tms.ParkingManagementSystem.model.dto.ReservationStatusUpdateDto;
@@ -91,15 +95,32 @@ public class ReservationService {
         Vehicle vehicle = vehicleRepository.findById(dto.getVehicleId())
                 .orElseThrow(() -> new VehicleNotFoundException(dto.getVehicleId()));
 
+        User user = vehicle.getUser();
+
+        log.debug("Reservation vehicle found, vehicleId = {}, userId = {}", vehicle.getId(), user.getId());
+
+        if (user.getStatus() != UserStatus.ACTIVE) {
+            log.warn("Reservation denied: user is not ACTIVE, userId = {}", user.getId());
+            throw new ReservationConflictException(
+                    "User with id = " + user.getId() + " is not ACTIVE"
+            );
+        }
+
         Spot spot = spotRepository.findById(dto.getSpotId())
                 .orElseThrow(() -> new SpotNotFoundException(dto.getSpotId()));
 
+        log.debug("Reservation spot found, spotId = {}, status = {}", spot.getId(), spot.getStatus());
+
         if (spot.getStatus() != SpotStatus.AVAILABLE) {
+            log.warn("Reservation denied: spot not AVAILABLE, spotId = {}, status = {}",
+                    spot.getId(), spot.getStatus());
             throw new ReservationConflictException(
                     "Spot with id = " + spot.getId() + " is not available for reservation"
             );
         }
 
+        validateSpotTypeForVehicle(spot, vehicle);
+        validateDisabledPermit(spot, vehicle);
 
         boolean hasOverlap = reservationRepository
                 .existsBySpotIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
@@ -136,6 +157,17 @@ public class ReservationService {
 
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            log.warn(
+                    "Reservation update denied: status is not ACTIVE, reservationId = {}, status = {}",
+                    reservation.getId(),
+                    reservation.getStatus()
+            );
+            throw new ReservationConflictException(
+                    "Only ACTIVE reservations can be updated"
+            );
+        }
 
         if (!dto.getEndTime().isAfter(reservation.getStartTime())) {
             throw new IllegalArgumentException("Reservation end time must be after start time");
@@ -228,5 +260,68 @@ public class ReservationService {
         log.info("Found {} reservations for spotId = {}", reservations.size(), spotId);
 
         return reservations;
+    }
+
+    private void validateSpotTypeForVehicle(Spot spot, Vehicle vehicle) {
+        log.debug(
+                "Validate spot type for vehicle, spotId = {}, spotType = {}, vehicleId = {}, vehicleType = {}",
+                spot.getId(),
+                spot.getType(),
+                vehicle.getId(),
+                vehicle.getType()
+        );
+
+        SpotType spotType = spot.getType();
+        VehicleType vehicleType = vehicle.getType();
+
+        if (spotType == SpotType.ELECTRIC && vehicleType != VehicleType.ELECTRIC_CAR) {
+            log.warn(
+                    "Reservation denied: ELECTRIC spot requires ELECTRIC_CAR, spotId = {}, vehicleId = {}, vehicleType = {}",
+                    spot.getId(),
+                    vehicle.getId(),
+                    vehicleType
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId() + " is ELECTRIC, only ELECTRIC_CAR is allowed"
+            );
+        }
+
+        if (spotType == SpotType.TRUCK && vehicleType != VehicleType.TRUCK) {
+            log.warn(
+                    "Reservation denied: TRUCK spot used by non-TRUCK vehicle, spotId = {}, vehicleId = {}, vehicleType = {}",
+                    spot.getId(),
+                    vehicle.getId(),
+                    vehicleType
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId() + " is for TRUCK, vehicle type = " + vehicleType
+            );
+        }
+    }
+
+    private void validateDisabledPermit(Spot spot, Vehicle vehicle) {
+        User user = vehicle.getUser();
+
+        log.debug(
+                "Validate disabled permit, spotId = {}, spotType = {}, userId = {}, disabledPermit = {}",
+                spot.getId(),
+                spot.getType(),
+                user.getId(),
+                user.getDisabledPermit()
+        );
+
+        if (spot.getType() == SpotType.DISABLED && !user.getDisabledPermit()) {
+            log.warn(
+                    "Reservation denied: disabled spot requires permit, spotId = {}, userId = {}",
+                    spot.getId(),
+                    user.getId()
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId()
+                            + " is for disabled drivers, user id = "
+                            + user.getId()
+                            + " has no disabled permit"
+            );
+        }
     }
 }
