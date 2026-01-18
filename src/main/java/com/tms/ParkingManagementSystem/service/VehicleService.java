@@ -1,11 +1,16 @@
 package com.tms.ParkingManagementSystem.service;
 
+import com.tms.ParkingManagementSystem.enums.ReservationStatus;
+import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.exception.PlateNumberAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
+import com.tms.ParkingManagementSystem.exception.VehicleInUseException;
 import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.VehicleCreateUpdateDto;
+import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
+import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -20,11 +25,17 @@ public class VehicleService {
 
     private final VehicleRepository vehicleRepository;
     private final UserRepository userRepository;
+    private final ParkingSessionRepository parkingSessionRepository;
+    private final ReservationRepository reservationRepository;
 
     public VehicleService(VehicleRepository vehicleRepository,
-                          UserRepository userRepository) {
+                          UserRepository userRepository,
+                          ParkingSessionRepository parkingSessionRepository,
+                          ReservationRepository reservationRepository) {
         this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
+        this.parkingSessionRepository = parkingSessionRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<Vehicle> getAllVehicles() {
@@ -101,6 +112,15 @@ public class VehicleService {
 
         if (!vehicleRepository.existsById(id)) {
             throw new VehicleNotFoundException(id);
+        }
+
+        if (parkingSessionRepository.existsByVehicleIdAndStatus(id, SessionStatus.ACTIVE)) {
+            throw new VehicleInUseException(id, "There is an active parking session for this vehicle");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (reservationRepository.existsByVehicleIdAndStatusAndEndTimeAfter(id, ReservationStatus.ACTIVE, now)) {
+            throw new VehicleInUseException(id, "There is an active (ongoing or future) reservation for this vehicle");
         }
 
         vehicleRepository.deleteById(id);

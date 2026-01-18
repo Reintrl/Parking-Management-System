@@ -1,10 +1,16 @@
 package com.tms.ParkingManagementSystem.service;
 
+import com.tms.ParkingManagementSystem.enums.ReservationStatus;
+import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.exception.EmailAlreadyExistsException;
+import com.tms.ParkingManagementSystem.exception.UserInUseException;
 import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
 import com.tms.ParkingManagementSystem.model.User;
+import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.UserCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.UserStatusUpdateDto;
+import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
+import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
 import jakarta.transaction.Transactional;
@@ -20,10 +26,18 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final VehicleRepository vehicleRepository;
+    private final ParkingSessionRepository parkingSessionRepository;
+    private final ReservationRepository reservationRepository;
 
-    public UserService(UserRepository userRepository, VehicleRepository vehicleRepository) {
+
+    public UserService(UserRepository userRepository,
+                       VehicleRepository vehicleRepository,
+                       ParkingSessionRepository parkingSessionRepository,
+                       ReservationRepository reservationRepository) {
         this.userRepository = userRepository;
         this.vehicleRepository = vehicleRepository;
+        this.parkingSessionRepository = parkingSessionRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<User> getAllUsers() {
@@ -87,21 +101,37 @@ public class UserService {
     }
 
     @Transactional
-    public boolean deleteUserById(Long id) {
-        log.info("Delete user, id = {}", id);
+    public boolean deleteUserById(Long userId) {
+        log.info("Delete user, id = {}", userId);
 
-        if (!userRepository.existsById(id)) {
-            throw new UserNotFoundException(id);
+        if (!userRepository.existsById(userId)) {
+            throw new UserNotFoundException(userId);
         }
 
-        vehicleRepository.deleteAllByUserId(id);
-        log.info("Deleted user vehicles, userId = {}", id);
+        List<Vehicle> vehicles = vehicleRepository.findAllByUserId(userId);
+        LocalDateTime now = LocalDateTime.now();
 
-        userRepository.deleteById(id);
+        for (Vehicle v : vehicles) {
+            Long vehicleId = v.getId();
 
-        log.info("User deleted, id = {}", id);
+            if (parkingSessionRepository.existsByVehicleIdAndStatus(vehicleId, SessionStatus.ACTIVE)) {
+                throw new UserInUseException(userId,
+                        "Vehicle id = " + vehicleId + " has an active parking session");
+            }
+
+            if (reservationRepository.existsByVehicleIdAndStatusAndEndTimeAfter(vehicleId, ReservationStatus.ACTIVE, now)) {
+                throw new UserInUseException(userId,
+                        "Vehicle id = " + vehicleId + " has an active (ongoing or future) reservation");
+            }
+        }
+
+        vehicleRepository.deleteAllByUserId(userId);
+        userRepository.deleteById(userId);
+
+        log.info("User deleted, id = {}", userId);
         return true;
     }
+
 
     public User changeStatus(Long id, UserStatusUpdateDto dto) {
         log.info("Change user status, id = {}, status = {}", id, dto.getStatus());

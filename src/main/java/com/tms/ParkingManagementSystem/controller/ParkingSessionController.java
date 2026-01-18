@@ -19,7 +19,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequestMapping("/parking-session")
+@RequestMapping("/parkingSession")
 public class ParkingSessionController {
 
     private final ParkingSessionService parkingSessionService;

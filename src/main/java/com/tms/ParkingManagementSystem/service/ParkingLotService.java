@@ -1,14 +1,20 @@
 package com.tms.ParkingManagementSystem.service;
 
+import com.tms.ParkingManagementSystem.enums.ReservationStatus;
+import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import com.tms.ParkingManagementSystem.exception.AddressAlreadyExistsException;
+import com.tms.ParkingManagementSystem.exception.ParkingLotInUseException;
 import com.tms.ParkingManagementSystem.exception.ParkingLotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.TariffNotFoundException;
 import com.tms.ParkingManagementSystem.model.ParkingLot;
+import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotUpdateStatusDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
+import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
+import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.TariffRepository;
 import jakarta.transaction.Transactional;
@@ -25,15 +31,21 @@ public class ParkingLotService {
     private final ParkingLotRepository parkingLotRepository;
     private final TariffRepository tariffRepository;
     private final SpotRepository spotRepository;
+    private final ParkingSessionRepository parkingSessionRepository;
+    private final ReservationRepository reservationRepository;
 
     public ParkingLotService(
             ParkingLotRepository parkingLotRepository,
             TariffRepository tariffRepository,
-            SpotRepository spotRepository) {
+            SpotRepository spotRepository,
+            ParkingSessionRepository parkingSessionRepository,
+            ReservationRepository reservationRepository) {
 
         this.parkingLotRepository = parkingLotRepository;
         this.tariffRepository = tariffRepository;
         this.spotRepository = spotRepository;
+        this.parkingSessionRepository = parkingSessionRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<ParkingLot> getAllParkingLots() {
@@ -80,6 +92,7 @@ public class ParkingLotService {
     public ParkingLot updateParkingLot(Long id, ParkingLotCreateUpdateDto dto) {
         log.info("Update parking lot, id = {}", id);
         log.debug("Update parking lot payload = {}", dto);
+
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
@@ -112,6 +125,7 @@ public class ParkingLotService {
     @Transactional
     public ParkingLot changeStatus(Long id, ParkingLotUpdateStatusDto dto) {
         log.info("Change parking lot status, id = {}, status = {}", id, dto.getStatus());
+
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
@@ -131,6 +145,23 @@ public class ParkingLotService {
         ParkingLot parkingLot = parkingLotRepository.findById(id)
                 .orElseThrow(() -> new ParkingLotNotFoundException(id));
 
+        List<Spot> spots = spotRepository.findByParkingLotId(id);
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Spot spot : spots) {
+            Long spotId = spot.getId();
+
+            if (parkingSessionRepository.existsBySpotIdAndStatus(spotId, SessionStatus.ACTIVE)) {
+                throw new ParkingLotInUseException(id,
+                        "Spot id = " + spotId + " has an active parking session");
+            }
+
+            if (reservationRepository.existsBySpotIdAndStatusAndEndTimeAfter(spotId, ReservationStatus.ACTIVE, now)) {
+                throw new ParkingLotInUseException(id,
+                        "Spot id = " + spotId + " has an active (ongoing or future) reservation");
+            }
+        }
+
         Tariff oldTariff = parkingLot.getTariff();
 
         spotRepository.deleteAllByParkingLotId(id);
@@ -139,7 +170,6 @@ public class ParkingLotService {
         if (!parkingLotRepository.existsByTariffId(oldTariff.getId())) {
             oldTariff.setStatus(TariffStatus.INACTIVE);
             tariffRepository.save(oldTariff);
-
             log.info("Tariff deactivated, tariffId = {}", oldTariff.getId());
         }
 

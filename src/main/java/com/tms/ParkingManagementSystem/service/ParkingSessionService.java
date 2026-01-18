@@ -151,11 +151,17 @@ public class ParkingSessionService {
         return createSession(dto);
     }
 
+    @Transactional
     public boolean deleteSessionById(Long id) {
         log.info("Delete parking session, id = {}", id);
 
-        if (!parkingSessionRepository.existsById(id)) {
-            throw new ParkingSessionNotFoundException(id);
+        ParkingSession session = parkingSessionRepository.findById(id)
+                .orElseThrow(() -> new ParkingSessionNotFoundException(id));
+
+        if (session.getStatus() == SessionStatus.ACTIVE) {
+            throw new ParkingSessionConflictException(
+                    "Cannot delete ACTIVE parking session. Finish it first."
+            );
         }
 
         parkingSessionRepository.deleteById(id);

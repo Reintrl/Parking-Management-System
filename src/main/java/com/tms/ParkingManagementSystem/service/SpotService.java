@@ -1,6 +1,9 @@
 package com.tms.ParkingManagementSystem.service;
 
+import com.tms.ParkingManagementSystem.enums.ReservationStatus;
+import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.exception.ParkingLotNotFoundException;
+import com.tms.ParkingManagementSystem.exception.SpotInUseException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.SpotNumberAlreadyExistsException;
 import com.tms.ParkingManagementSystem.model.ParkingLot;
@@ -9,6 +12,8 @@ import com.tms.ParkingManagementSystem.model.dto.SpotCreateDto;
 import com.tms.ParkingManagementSystem.model.dto.SpotStatusUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.SpotUpdateDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
+import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
+import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -22,11 +27,17 @@ public class SpotService {
 
     private final SpotRepository spotRepository;
     private final ParkingLotRepository parkingLotRepository;
+    private final ParkingSessionRepository parkingSessionRepository;
+    private final ReservationRepository reservationRepository;
 
     public SpotService(SpotRepository spotRepository,
-                       ParkingLotRepository parkingLotRepository) {
+                       ParkingLotRepository parkingLotRepository,
+                       ParkingSessionRepository parkingSessionRepository,
+                       ReservationRepository reservationRepository) {
         this.spotRepository = spotRepository;
         this.parkingLotRepository = parkingLotRepository;
+        this.parkingSessionRepository = parkingSessionRepository;
+        this.reservationRepository = reservationRepository;
     }
 
     public List<Spot> getAllSpots() {
@@ -101,6 +112,15 @@ public class SpotService {
 
         if (!spotRepository.existsById(id)) {
             throw new SpotNotFoundException(id);
+        }
+
+        if (parkingSessionRepository.existsBySpotIdAndStatus(id, SessionStatus.ACTIVE)) {
+            throw new SpotInUseException(id, "There is an active parking session for this spot");
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        if (reservationRepository.existsBySpotIdAndStatusAndEndTimeAfter(id, ReservationStatus.ACTIVE, now)) {
+            throw new SpotInUseException(id, "There is an active (ongoing or future) reservation for this spot");
         }
 
         spotRepository.deleteById(id);

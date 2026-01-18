@@ -19,4 +19,17 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDateTime startTime
     );
     List<Reservation> findByStatusAndEndTimeBefore(ReservationStatus status, LocalDateTime time);
+    boolean existsBySpotIdAndStatusAndEndTimeAfter(Long spotId, ReservationStatus status, LocalDateTime time);
+    boolean existsByVehicleIdAndStatusAndEndTimeAfter(
+            Long vehicleId,
+            ReservationStatus status,
+            LocalDateTime time
+    );
+    boolean existsBySpotIdAndStatusAndIdNotAndStartTimeLessThanAndEndTimeGreaterThan(
+            Long spotId,
+            ReservationStatus status,
+            Long id,
+            LocalDateTime endTime,
+            LocalDateTime startTime
+    );
 }

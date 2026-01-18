@@ -45,7 +45,12 @@ public class GlobalExceptionHandler {
             SpotNumberAlreadyExistsException.class,
             TariffInUseException.class,
             ParkingSessionConflictException.class,
-            ReservationInUseException.class
+            ReservationInUseException.class,
+            SpotInUseException.class,
+            VehicleInUseException.class,
+            ParkingLotInUseException.class,
+            UserInUseException.class,
+            ReservationConflictException.class
     })
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
         log.warn("CONFLICT: {}", ex.getMessage());

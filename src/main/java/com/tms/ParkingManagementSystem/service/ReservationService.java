@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
+import com.tms.ParkingManagementSystem.exception.ReservationConflictException;
 import com.tms.ParkingManagementSystem.exception.ReservationInUseException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
@@ -16,6 +17,7 @@ import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -41,9 +43,12 @@ public class ReservationService {
         this.parkingSessionRepository = parkingSessionRepository;
     }
 
-    private void expireOutdatedReservations() {
+    @Transactional
+    protected void expireOutdatedReservations() {
+        LocalDateTime now = LocalDateTime.now();
+
         List<Reservation> outdated = reservationRepository
-                .findByStatusAndEndTimeBefore(ReservationStatus.ACTIVE, LocalDateTime.now());
+                .findByStatusAndEndTimeBefore(ReservationStatus.ACTIVE, now);
 
         if (outdated.isEmpty()) {
             return;
@@ -51,7 +56,7 @@ public class ReservationService {
 
         for (Reservation r : outdated) {
             r.setStatus(ReservationStatus.EXPIRED);
-            r.setChanged(LocalDateTime.now());
+            r.setChanged(now);
         }
 
         reservationRepository.saveAll(outdated);
@@ -90,10 +95,11 @@ public class ReservationService {
                 .orElseThrow(() -> new SpotNotFoundException(dto.getSpotId()));
 
         if (spot.getStatus() != SpotStatus.AVAILABLE) {
-            throw new IllegalArgumentException(
+            throw new ReservationConflictException(
                     "Spot with id = " + spot.getId() + " is not available for reservation"
             );
         }
+
 
         boolean hasOverlap = reservationRepository
                 .existsBySpotIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
@@ -104,10 +110,11 @@ public class ReservationService {
                 );
 
         if (hasOverlap) {
-            throw new IllegalArgumentException(
+            throw new ReservationConflictException(
                     "Spot with id = " + spot.getId() + " already has an active reservation in this time range"
             );
         }
+
 
         Reservation reservation = new Reservation(vehicle, spot, dto.getStartTime(), LocalDateTime.now());
         reservation.setEndTime(dto.getEndTime());
@@ -135,15 +142,16 @@ public class ReservationService {
         }
 
         boolean hasOverlap = reservationRepository
-                .existsBySpotIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
+                .existsBySpotIdAndStatusAndIdNotAndStartTimeLessThanAndEndTimeGreaterThan(
                         reservation.getSpot().getId(),
                         ReservationStatus.ACTIVE,
+                        reservation.getId(),
                         dto.getEndTime(),
                         reservation.getStartTime()
                 );
 
         if (hasOverlap) {
-            throw new IllegalArgumentException(
+            throw new ReservationConflictException(
                     "Updated reservation time overlaps with another active reservation for this spot"
             );
         }
