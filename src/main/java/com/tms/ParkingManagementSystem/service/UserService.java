@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
+import com.tms.ParkingManagementSystem.enums.UserStatus;
 import com.tms.ParkingManagementSystem.exception.EmailAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.UserInUseException;
 import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
@@ -108,22 +109,7 @@ public class UserService {
             throw new UserNotFoundException(userId);
         }
 
-        List<Vehicle> vehicles = vehicleRepository.findAllByUserId(userId);
-        LocalDateTime now = LocalDateTime.now();
-
-        for (Vehicle v : vehicles) {
-            Long vehicleId = v.getId();
-
-            if (parkingSessionRepository.existsByVehicleIdAndStatus(vehicleId, SessionStatus.ACTIVE)) {
-                throw new UserInUseException(userId,
-                        "Vehicle id = " + vehicleId + " has an active parking session");
-            }
-
-            if (reservationRepository.existsByVehicleIdAndStatusAndEndTimeAfter(vehicleId, ReservationStatus.ACTIVE, now)) {
-                throw new UserInUseException(userId,
-                        "Vehicle id = " + vehicleId + " has an active (ongoing or future) reservation");
-            }
-        }
+        validateUserInUse(userId);
 
         vehicleRepository.deleteAllByUserId(userId);
         userRepository.deleteById(userId);
@@ -132,13 +118,16 @@ public class UserService {
         return true;
     }
 
-
     public User changeStatus(Long id, UserStatusUpdateDto dto) {
         log.info("Change user status, id = {}, status = {}", id, dto.getStatus());
         log.debug("Change user status payload = {}", dto);
 
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
+
+        if (dto.getStatus().equals(UserStatus.BLOCKED)) {
+            validateUserInUse(id);
+        }
 
         user.setStatus(dto.getStatus());
         user.setChanged(LocalDateTime.now());
@@ -147,5 +136,24 @@ public class UserService {
 
         log.info("User status changed, id = {}", saved.getId());
         return saved;
+    }
+
+    private void validateUserInUse(Long id) {
+        List<Vehicle> vehicles = vehicleRepository.findAllByUserId(id);
+        LocalDateTime now = LocalDateTime.now();
+
+        for (Vehicle v : vehicles) {
+            Long vehicleId = v.getId();
+
+            if (parkingSessionRepository.existsByVehicleIdAndStatus(vehicleId, SessionStatus.ACTIVE)) {
+                throw new UserInUseException(id,
+                        "Vehicle id = " + vehicleId + " has an active parking session");
+            }
+
+            if (reservationRepository.existsByVehicleIdAndStatusAndEndTimeAfter(vehicleId, ReservationStatus.ACTIVE, now)) {
+                throw new UserInUseException(id,
+                        "Vehicle id = " + vehicleId + " has an active (ongoing or future) reservation");
+            }
+        }
     }
 }

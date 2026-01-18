@@ -251,6 +251,13 @@ public class ParkingSessionService {
         spot.setChanged(now);
         spotRepository.save(spot);
 
+        Reservation reservation = session.getReservation();
+        if(reservation != null) {
+            reservation.setStatus(ReservationStatus.EXPIRED);
+            reservation.setChanged(now);
+            reservationRepository.save(reservation);
+        }
+
         log.info("Spot marked as AVAILABLE, spotId = {}", spot.getId());
 
         ParkingSession saved = parkingSessionRepository.save(session);

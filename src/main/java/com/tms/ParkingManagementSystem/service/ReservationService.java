@@ -47,8 +47,7 @@ public class ReservationService {
         this.parkingSessionRepository = parkingSessionRepository;
     }
 
-    @Transactional
-    protected void expireOutdatedReservations() {
+    private void expireOutdatedReservations() {
         LocalDateTime now = LocalDateTime.now();
 
         List<Reservation> outdated = reservationRepository
@@ -68,6 +67,59 @@ public class ReservationService {
         log.info("Expired outdated reservations, count = {}", outdated.size());
     }
 
+    private void validateSpotTypeForVehicle(Spot spot, Vehicle vehicle) {
+        SpotType spotType = spot.getType();
+        VehicleType vehicleType = vehicle.getType();
+
+        log.debug(
+                "Validate spot type for vehicle, spotId = {}, spotType = {}, vehicleId = {}, vehicleType = {}",
+                spot.getId(), spotType, vehicle.getId(), vehicleType
+        );
+
+        if (spotType == SpotType.ELECTRIC && vehicleType != VehicleType.ELECTRIC_CAR) {
+            log.warn(
+                    "Reservation denied: ELECTRIC spot requires ELECTRIC_CAR, spotId = {}, vehicleId = {}, vehicleType = {}",
+                    spot.getId(), vehicle.getId(), vehicleType
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId() + " is ELECTRIC, only ELECTRIC_CAR is allowed"
+            );
+        }
+
+        if (spotType == SpotType.TRUCK && vehicleType != VehicleType.TRUCK) {
+            log.warn(
+                    "Reservation denied: TRUCK spot used by non-TRUCK vehicle, spotId = {}, vehicleId = {}, vehicleType = {}",
+                    spot.getId(), vehicle.getId(), vehicleType
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId() + " is for TRUCK, vehicle type = " + vehicleType
+            );
+        }
+    }
+
+    private void validateDisabledPermit(Spot spot, Vehicle vehicle) {
+        User user = vehicle.getUser();
+
+        log.debug(
+                "Validate disabled permit, spotId = {}, spotType = {}, userId = {}, disabledPermit = {}",
+                spot.getId(), spot.getType(), user.getId(), user.getDisabledPermit()
+        );
+
+        if (spot.getType() == SpotType.DISABLED && !user.getDisabledPermit()) {
+            log.warn(
+                    "Reservation denied: disabled spot requires permit, spotId = {}, userId = {}",
+                    spot.getId(), user.getId()
+            );
+            throw new ReservationConflictException(
+                    "Spot id = " + spot.getId()
+                            + " is for disabled drivers, user id = "
+                            + user.getId()
+                            + " has no disabled permit"
+            );
+        }
+    }
+
+    @Transactional
     public List<Reservation> getAllReservations() {
         log.info("Get all reservations");
 
@@ -79,6 +131,7 @@ public class ReservationService {
         return reservations;
     }
 
+    @Transactional
     public Reservation getReservationById(Long id) {
         log.info("Get reservation by id = {}", id);
 
@@ -88,19 +141,28 @@ public class ReservationService {
                 .orElseThrow(() -> new ReservationNotFoundException(id));
     }
 
+    @Transactional
     public Reservation createReservation(ReservationCreateDto dto) {
         log.info("Create reservation");
         log.debug("Create reservation payload = {}", dto);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        if (!dto.getEndTime().isAfter(dto.getStartTime())) {
+            log.warn("Reservation denied: endTime must be after startTime, start = {}, end = {}",
+                    dto.getStartTime(), dto.getEndTime());
+            throw new IllegalArgumentException("Reservation end time must be after start time");
+        }
 
         Vehicle vehicle = vehicleRepository.findById(dto.getVehicleId())
                 .orElseThrow(() -> new VehicleNotFoundException(dto.getVehicleId()));
 
         User user = vehicle.getUser();
-
         log.debug("Reservation vehicle found, vehicleId = {}, userId = {}", vehicle.getId(), user.getId());
 
         if (user.getStatus() != UserStatus.ACTIVE) {
-            log.warn("Reservation denied: user is not ACTIVE, userId = {}", user.getId());
+            log.warn("Reservation denied: user is not ACTIVE, userId = {}, status = {}",
+                    user.getId(), user.getStatus());
             throw new ReservationConflictException(
                     "User with id = " + user.getId() + " is not ACTIVE"
             );
@@ -131,15 +193,16 @@ public class ReservationService {
                 );
 
         if (hasOverlap) {
+            log.warn("Reservation denied: time overlap, spotId = {}, start = {}, end = {}",
+                    spot.getId(), dto.getStartTime(), dto.getEndTime());
             throw new ReservationConflictException(
                     "Spot with id = " + spot.getId() + " already has an active reservation in this time range"
             );
         }
 
-
-        Reservation reservation = new Reservation(vehicle, spot, dto.getStartTime(), LocalDateTime.now());
+        Reservation reservation = new Reservation(vehicle, spot, dto.getStartTime(), now);
         reservation.setEndTime(dto.getEndTime());
-        reservation.setChanged(LocalDateTime.now());
+        reservation.setChanged(now);
 
         Reservation saved = reservationRepository.save(reservation);
 
@@ -149,6 +212,7 @@ public class ReservationService {
         return saved;
     }
 
+    @Transactional
     public Reservation updateReservation(Long id, ReservationUpdateDto dto) {
         log.info("Update reservation, id = {}", id);
         log.debug("Update reservation payload = {}", dto);
@@ -159,14 +223,9 @@ public class ReservationService {
                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
         if (reservation.getStatus() != ReservationStatus.ACTIVE) {
-            log.warn(
-                    "Reservation update denied: status is not ACTIVE, reservationId = {}, status = {}",
-                    reservation.getId(),
-                    reservation.getStatus()
-            );
-            throw new ReservationConflictException(
-                    "Only ACTIVE reservations can be updated"
-            );
+            log.warn("Reservation update denied: not ACTIVE, id = {}, status = {}",
+                    reservation.getId(), reservation.getStatus());
+            throw new ReservationConflictException("Only ACTIVE reservations can be updated");
         }
 
         if (!dto.getEndTime().isAfter(reservation.getStartTime())) {
@@ -183,6 +242,7 @@ public class ReservationService {
                 );
 
         if (hasOverlap) {
+            log.warn("Reservation update denied: time overlap, reservationId = {}", reservation.getId());
             throw new ReservationConflictException(
                     "Updated reservation time overlaps with another active reservation for this spot"
             );
@@ -197,6 +257,7 @@ public class ReservationService {
         return saved;
     }
 
+    @Transactional
     public Reservation changeStatus(Long id, ReservationStatusUpdateDto dto) {
         log.info("Change reservation status, id = {}, status = {}", id, dto.getStatus());
         log.debug("Change reservation status payload = {}", dto);
@@ -215,6 +276,7 @@ public class ReservationService {
         return saved;
     }
 
+    @Transactional
     public boolean deleteReservationById(Long id) {
         log.info("Delete reservation, id = {}", id);
 
@@ -232,6 +294,7 @@ public class ReservationService {
         return true;
     }
 
+    @Transactional
     public List<Reservation> getReservationsByVehicleId(Long vehicleId) {
         log.info("Get reservations by vehicleId = {}", vehicleId);
 
@@ -247,6 +310,7 @@ public class ReservationService {
         return reservations;
     }
 
+    @Transactional
     public List<Reservation> getReservationsBySpotId(Long spotId) {
         log.info("Get reservations by spotId = {}", spotId);
 
@@ -260,68 +324,5 @@ public class ReservationService {
         log.info("Found {} reservations for spotId = {}", reservations.size(), spotId);
 
         return reservations;
-    }
-
-    private void validateSpotTypeForVehicle(Spot spot, Vehicle vehicle) {
-        log.debug(
-                "Validate spot type for vehicle, spotId = {}, spotType = {}, vehicleId = {}, vehicleType = {}",
-                spot.getId(),
-                spot.getType(),
-                vehicle.getId(),
-                vehicle.getType()
-        );
-
-        SpotType spotType = spot.getType();
-        VehicleType vehicleType = vehicle.getType();
-
-        if (spotType == SpotType.ELECTRIC && vehicleType != VehicleType.ELECTRIC_CAR) {
-            log.warn(
-                    "Reservation denied: ELECTRIC spot requires ELECTRIC_CAR, spotId = {}, vehicleId = {}, vehicleType = {}",
-                    spot.getId(),
-                    vehicle.getId(),
-                    vehicleType
-            );
-            throw new ReservationConflictException(
-                    "Spot id = " + spot.getId() + " is ELECTRIC, only ELECTRIC_CAR is allowed"
-            );
-        }
-
-        if (spotType == SpotType.TRUCK && vehicleType != VehicleType.TRUCK) {
-            log.warn(
-                    "Reservation denied: TRUCK spot used by non-TRUCK vehicle, spotId = {}, vehicleId = {}, vehicleType = {}",
-                    spot.getId(),
-                    vehicle.getId(),
-                    vehicleType
-            );
-            throw new ReservationConflictException(
-                    "Spot id = " + spot.getId() + " is for TRUCK, vehicle type = " + vehicleType
-            );
-        }
-    }
-
-    private void validateDisabledPermit(Spot spot, Vehicle vehicle) {
-        User user = vehicle.getUser();
-
-        log.debug(
-                "Validate disabled permit, spotId = {}, spotType = {}, userId = {}, disabledPermit = {}",
-                spot.getId(),
-                spot.getType(),
-                user.getId(),
-                user.getDisabledPermit()
-        );
-
-        if (spot.getType() == SpotType.DISABLED && !user.getDisabledPermit()) {
-            log.warn(
-                    "Reservation denied: disabled spot requires permit, spotId = {}, userId = {}",
-                    spot.getId(),
-                    user.getId()
-            );
-            throw new ReservationConflictException(
-                    "Spot id = " + spot.getId()
-                            + " is for disabled drivers, user id = "
-                            + user.getId()
-                            + " has no disabled permit"
-            );
-        }
     }
 }
