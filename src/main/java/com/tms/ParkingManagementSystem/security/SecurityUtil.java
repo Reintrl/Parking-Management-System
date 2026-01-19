@@ -10,7 +10,6 @@ import com.tms.ParkingManagementSystem.model.Reservation;
 import com.tms.ParkingManagementSystem.model.Security;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
-import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -22,14 +21,11 @@ public class SecurityUtil {
 
     private final VehicleRepository vehicleRepository;
     private final SecurityRepository securityRepository;
-    private final UserRepository userRepository;
 
     public SecurityUtil(VehicleRepository vehicleRepository,
-                        SecurityRepository securityRepository,
-                        UserRepository userRepository) {
+                        SecurityRepository securityRepository) {
         this.vehicleRepository = vehicleRepository;
         this.securityRepository = securityRepository;
-        this.userRepository = userRepository;
     }
 
     public boolean isAdmin() {

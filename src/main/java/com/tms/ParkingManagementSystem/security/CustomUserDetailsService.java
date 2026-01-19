@@ -1,6 +1,5 @@
 package com.tms.ParkingManagementSystem.security;
 
-import com.tms.ParkingManagementSystem.security.SecurityRepository;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
