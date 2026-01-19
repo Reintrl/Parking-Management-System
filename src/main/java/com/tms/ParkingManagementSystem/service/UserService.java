@@ -7,7 +7,6 @@ import com.tms.ParkingManagementSystem.exception.EmailAlreadyExistsException;
 import com.tms.ParkingManagementSystem.exception.UserAccessDeniedException;
 import com.tms.ParkingManagementSystem.exception.UserInUseException;
 import com.tms.ParkingManagementSystem.exception.UserNotFoundException;
-import com.tms.ParkingManagementSystem.model.Security;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.UserCreateUpdateDto;
@@ -18,16 +17,13 @@ import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
-import com.tms.ParkingManagementSystem.security.SecurityRepository;
 import com.tms.ParkingManagementSystem.security.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -37,24 +33,22 @@ public class UserService {
     private final VehicleRepository vehicleRepository;
     private final ParkingSessionRepository parkingSessionRepository;
     private final ReservationRepository reservationRepository;
-    private final SecurityRepository securityRepository;
     private final SecurityUtil securityUtil;
 
     public UserService(UserRepository userRepository,
                        VehicleRepository vehicleRepository,
                        ParkingSessionRepository parkingSessionRepository,
                        ReservationRepository reservationRepository,
-                       SecurityRepository securityRepository,
                        SecurityUtil securityUtil) {
         this.userRepository = userRepository;
         this.vehicleRepository = vehicleRepository;
         this.parkingSessionRepository = parkingSessionRepository;
         this.reservationRepository = reservationRepository;
-        this.securityRepository = securityRepository;
         this.securityUtil = securityUtil;
     }
 
     public List<User> getAllUsers() {
+
         log.info("Get all users");
 
         List<User> users = userRepository.findAll();
@@ -179,7 +173,7 @@ public class UserService {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
 
-        User currentUser = getCurrentUser();
+        User currentUser = securityUtil.getCurrentUser();
 
         if (!securityUtil.isAdmin() && !currentUser.getId().equals(user.getId())) {
             throw new UserAccessDeniedException(id);
@@ -199,17 +193,8 @@ public class UserService {
         return true;
     }
 
-    public User getCurrentUser() {
-        String userLogin = SecurityContextHolder.getContext().getAuthentication().getName();
-        Optional<Security> userSecurity = securityRepository.findByUsername(userLogin);
-        if (userSecurity.isPresent()) {
-            return userRepository.findById(userSecurity.get().getUser().getId()).get();
-        }
-        throw new UserNotFoundException(userSecurity.get().getUser().getId());
-    }
-
     public User updateCurrentUser(UserUpdateMeDto dto) {
-        User user = getCurrentUser();
+        User user = securityUtil.getCurrentUser();
         user.setFirstName(dto.getFirstName());
         user.setSecondName(dto.getSecondName());
         user.setEmail(dto.getEmail());

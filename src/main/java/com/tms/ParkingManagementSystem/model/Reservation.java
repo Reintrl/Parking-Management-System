@@ -13,7 +13,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -61,8 +60,4 @@ public class Reservation {
     @Column(nullable = false)
     private LocalDateTime changed;
 
-    @AssertTrue(message = "Reservation end time must be after start time")
-    private boolean isReservationTimeValid() {
-        return startTime == null || endTime == null || endTime.isAfter(startTime);
-    }
 }

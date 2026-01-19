@@ -1,13 +1,15 @@
 package com.tms.ParkingManagementSystem.controller;
 
 import com.tms.ParkingManagementSystem.model.User;
-import com.tms.ParkingManagementSystem.model.dto.UserCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.UserMeDto;
 import com.tms.ParkingManagementSystem.model.dto.UserUpdateMeDto;
+import com.tms.ParkingManagementSystem.security.SecurityUtil;
 import com.tms.ParkingManagementSystem.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,15 +22,17 @@ import org.springframework.web.bind.annotation.RestController;
 public class MeController {
 
     private final UserService userService;
+    private final SecurityUtil securityUtil;
 
-    public MeController(UserService userService) {
+    public MeController(UserService userService, SecurityUtil securityUtil) {
         this.userService = userService;
+        this.securityUtil = securityUtil;
     }
 
     @GetMapping
     public ResponseEntity<UserMeDto> getMe() {
         log.info("Request: get current user profile");
-        User me = userService.getCurrentUser();
+        User me = securityUtil.getCurrentUser();
         return ResponseEntity.ok(userService.mapToDto(me));
     }
 

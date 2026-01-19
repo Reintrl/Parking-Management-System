@@ -33,23 +33,17 @@ public class VehicleService {
     private final UserRepository userRepository;
     private final ParkingSessionRepository parkingSessionRepository;
     private final ReservationRepository reservationRepository;
-    private final ParkingSessionService parkingSessionService;
-    private final UserService userService;
     private final SecurityUtil securityUtil;
 
     public VehicleService(VehicleRepository vehicleRepository,
                           UserRepository userRepository,
                           ParkingSessionRepository parkingSessionRepository,
                           ReservationRepository reservationRepository,
-                          ParkingSessionService parkingSessionService,
-                          UserService userService,
                           SecurityUtil securityUtil) {
         this.vehicleRepository = vehicleRepository;
         this.userRepository = userRepository;
         this.parkingSessionRepository = parkingSessionRepository;
         this.reservationRepository = reservationRepository;
-        this.parkingSessionService = parkingSessionService;
-        this.userService = userService;
         this.securityUtil = securityUtil;
     }
 
@@ -77,7 +71,7 @@ public class VehicleService {
             throw new PlateNumberAlreadyExistsException(dto.getPlateNumber());
         }
 
-        User currentUser = userService.getCurrentUser();
+        User currentUser = securityUtil.getCurrentUser();
 
         if (!securityUtil.isAdmin() && !currentUser.getId().equals(dto.getUserId())) {
             throw new UserAccessDeniedException(dto.getUserId());
@@ -113,7 +107,7 @@ public class VehicleService {
                 .orElseThrow(() -> new VehicleNotFoundException(id));
 
         if (!securityUtil.isAdmin()) {
-            User currentUser = userService.getCurrentUser();
+            User currentUser = securityUtil.getCurrentUser();
             Long ownerId = vehicleForUpdate.getUser().getId();
 
             if (!ownerId.equals(currentUser.getId())) {
@@ -158,7 +152,7 @@ public class VehicleService {
                 .orElseThrow(() -> new VehicleNotFoundException(id));
 
         if (!securityUtil.isAdmin()) {
-            User currentUser = userService.getCurrentUser();
+            User currentUser = securityUtil.getCurrentUser();
             Long ownerId = vehicle.getUser().getId();
 
             if (!ownerId.equals(currentUser.getId())) {
@@ -186,7 +180,7 @@ public class VehicleService {
         log.info("Get vehicles by userId = {}", userId);
 
         if (!securityUtil.isAdmin()) {
-            User currentUser = userService.getCurrentUser();
+            User currentUser = securityUtil.getCurrentUser();
             if (!currentUser.getId().equals(userId)) {
                 throw new UserAccessDeniedException(userId);
             }

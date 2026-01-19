@@ -89,7 +89,7 @@ public class GlobalExceptionHandler {
     //500 INTERNAL SERVER ERROR
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
+    public ResponseEntity<Map<String, Object>> handleUnexpected(RuntimeException ex) {
         log.error("UNEXPECTED_ERROR", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "INTERNAL_SERVER_ERROR",
@@ -102,10 +102,9 @@ public class GlobalExceptionHandler {
             SessionAccessDeniedException.class,
             UserNotActiveException.class,
             ReservationAccessDeniedException.class,
-            VehicleAccessDeniedException.class,
-            UserVehicleNotFoundException.class
+            VehicleAccessDeniedException.class
     })
-    public ResponseEntity<?> handleForbidden(SessionAccessDeniedException ex) {
+    public ResponseEntity<?> handleForbidden(RuntimeException ex) {
         return ResponseEntity
                 .status(HttpStatus.FORBIDDEN)
                 .body(Map.of(

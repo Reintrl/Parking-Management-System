@@ -14,7 +14,6 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.AssertTrue;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -66,19 +65,4 @@ public class ParkingSession {
 
     @Column(name = "total_cost", precision = 10, scale = 2)
     private BigDecimal totalCost;
-
-    @AssertTrue(message = "End time must be after start time")
-    private boolean isEndTimeValid() {
-        return endTime == null || startTime == null || endTime.isAfter(startTime);
-    }
-
-    @AssertTrue(message = "Finished session must have end time")
-    private boolean isFinishedHasEndTime() {
-        return status != SessionStatus.FINISHED || endTime != null;
-    }
-
-    @AssertTrue(message = "Active session must not have end time")
-    private boolean isActiveHasNoEndTime() {
-        return status != SessionStatus.ACTIVE || endTime == null;
-    }
 }

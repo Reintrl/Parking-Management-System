@@ -126,6 +126,9 @@ public class SecurityConfig {
                         .requestMatchers("/me/**")
                         .hasAnyAuthority("USER", "OPERATOR", "ADMIN")
 
+                        .requestMatchers("/security/**")
+                        .hasAuthority("ADMIN")
+
                         .anyRequest().authenticated()
                 );
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -49,20 +49,17 @@ public class ParkingSessionService {
     private final VehicleRepository vehicleRepository;
     private final SpotRepository spotRepository;
     private final ReservationRepository reservationRepository;
-    private final UserService userService;
     private final SecurityUtil securityUtil;
 
     public ParkingSessionService(ParkingSessionRepository parkingSessionRepository,
                                  VehicleRepository vehicleRepository,
                                  SpotRepository spotRepository,
                                  ReservationRepository reservationRepository,
-                                 UserService userService,
                                  SecurityUtil securityUtil) {
         this.parkingSessionRepository = parkingSessionRepository;
         this.vehicleRepository = vehicleRepository;
         this.spotRepository = spotRepository;
         this.reservationRepository = reservationRepository;
-        this.userService = userService;
         this.securityUtil = securityUtil;
     }
 
@@ -79,11 +76,13 @@ public class ParkingSessionService {
         return toDto(getSessionById(id));
     }
 
+    @Transactional
     public ParkingSessionResponseDto createSessionDto(ParkingSessionCreateDto dto) {
         ParkingSession created = createSession(dto);
         return toDto(created);
     }
 
+    @Transactional
     public ParkingSessionResponseDto createSessionFromReservationDto(Long reservationId) {
         ParkingSession created = createSessionFromReservation(reservationId);
         return toDto(created);
@@ -119,7 +118,7 @@ public class ParkingSessionService {
             return session;
         }
 
-        User currentUser = userService.getCurrentUser();
+        User currentUser = securityUtil.getCurrentUser();
         Long sessionOwnerId = session.getVehicle().getUser().getId();
 
         if (!sessionOwnerId.equals(currentUser.getId())) {
