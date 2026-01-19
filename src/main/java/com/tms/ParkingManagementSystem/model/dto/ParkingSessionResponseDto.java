@@ -4,6 +4,7 @@ import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -20,4 +21,6 @@ public class ParkingSessionResponseDto {
     private SpotShortDto spot;
 
     private ReservationShortDto reservation;
+
+    private BigDecimal totalCost;
 }

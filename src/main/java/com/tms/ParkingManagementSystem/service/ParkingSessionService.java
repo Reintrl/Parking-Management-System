@@ -9,11 +9,13 @@ import com.tms.ParkingManagementSystem.enums.VehicleType;
 import com.tms.ParkingManagementSystem.exception.ParkingSessionConflictException;
 import com.tms.ParkingManagementSystem.exception.ParkingSessionNotFoundException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
+import com.tms.ParkingManagementSystem.exception.SessionAccessDeniedException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
 import com.tms.ParkingManagementSystem.model.ParkingSession;
 import com.tms.ParkingManagementSystem.model.Reservation;
 import com.tms.ParkingManagementSystem.model.Spot;
+import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.ParkingSessionCreateDto;
@@ -25,10 +27,17 @@ import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import com.tms.ParkingManagementSystem.security.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -40,15 +49,21 @@ public class ParkingSessionService {
     private final VehicleRepository vehicleRepository;
     private final SpotRepository spotRepository;
     private final ReservationRepository reservationRepository;
+    private final UserService userService;
+    private final SecurityUtil securityUtil;
 
     public ParkingSessionService(ParkingSessionRepository parkingSessionRepository,
                                  VehicleRepository vehicleRepository,
                                  SpotRepository spotRepository,
-                                 ReservationRepository reservationRepository) {
+                                 ReservationRepository reservationRepository,
+                                 UserService userService,
+                                 SecurityUtil securityUtil) {
         this.parkingSessionRepository = parkingSessionRepository;
         this.vehicleRepository = vehicleRepository;
         this.spotRepository = spotRepository;
         this.reservationRepository = reservationRepository;
+        this.userService = userService;
+        this.securityUtil = securityUtil;
     }
 
 
@@ -64,7 +79,6 @@ public class ParkingSessionService {
         return toDto(getSessionById(id));
     }
 
-    @Transactional
     public ParkingSessionResponseDto createSessionDto(ParkingSessionCreateDto dto) {
         ParkingSession created = createSession(dto);
         return toDto(created);
@@ -96,9 +110,27 @@ public class ParkingSessionService {
     public ParkingSession getSessionById(Long id) {
         log.info("Get parking session by id = {}", id);
 
-        return parkingSessionRepository.findById(id)
+        ParkingSession session = parkingSessionRepository.findById(id)
                 .orElseThrow(() -> new ParkingSessionNotFoundException(id));
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.getAuthorities().contains(new SimpleGrantedAuthority("ADMIN"))) {
+            return session;
+        }
+
+        User currentUser = userService.getCurrentUser();
+        Long sessionOwnerId = session.getVehicle().getUser().getId();
+
+        if (!sessionOwnerId.equals(currentUser.getId())) {
+            log.warn("Access denied: user {} tried to access session {} owned by user {}",
+                    currentUser.getId(), id, sessionOwnerId);
+            throw new SessionAccessDeniedException(id);
+        }
+
+        return session;
     }
+
 
     @Transactional
     public ParkingSession createSession(ParkingSessionCreateDto dto) {
@@ -216,6 +248,7 @@ public class ParkingSessionService {
         return saved;
     }
 
+    @Transactional
     public ParkingSession createSessionFromReservation(Long reservationId) {
         log.info("Create parking session from reservation, reservationId = {}", reservationId);
 
@@ -263,9 +296,7 @@ public class ParkingSessionService {
     public List<ParkingSession> getSessionsByVehicleId(Long vehicleId) {
         log.info("Get parking sessions by vehicleId = {}", vehicleId);
 
-        if (!vehicleRepository.existsById(vehicleId)) {
-            throw new VehicleNotFoundException(vehicleId);
-        }
+        securityUtil.assertVehicleOwnerOrAdmin(vehicleId);
 
         return parkingSessionRepository.findByVehicleId(vehicleId);
     }
@@ -277,6 +308,8 @@ public class ParkingSessionService {
         ParkingSession session = parkingSessionRepository.findById(id)
                 .orElseThrow(() -> new ParkingSessionNotFoundException(id));
 
+        securityUtil.assertSessionOwnerOrAdmin(session);
+
         if (session.getStatus() == SessionStatus.FINISHED) {
             log.warn("Session finish denied: already FINISHED, id = {}", id);
             throw new ParkingSessionConflictException("Parking session with id = " + id + " is already FINISHED");
@@ -286,6 +319,21 @@ public class ParkingSessionService {
 
         session.setStatus(SessionStatus.FINISHED);
         session.setEndTime(now);
+
+        Tariff tariff = session.getSpot().getParkingLot().getTariff();
+
+        BigDecimal cost = calculateCost(
+                session.getStartTime(),
+                now,
+                tariff.getHourPrice(),
+                tariff.getBillingStepMinutes(),
+                tariff.getFreeMinutes()
+        );
+
+        session.setTotalCost(cost);
+
+        log.info("Session cost calculated, sessionId = {}, cost = {}, tariffId = {}",
+                session.getId(), cost, tariff.getId());
 
         Spot spot = session.getSpot();
         spot.setStatus(SpotStatus.AVAILABLE);
@@ -307,6 +355,7 @@ public class ParkingSessionService {
 
         return saved;
     }
+
 
     private ParkingSessionResponseDto toDto(ParkingSession session) {
         if (session == null) {
@@ -346,7 +395,8 @@ public class ParkingSessionService {
                 session.getEndTime(),
                 vehicleDto,
                 spotDto,
-                reservationDto
+                reservationDto,
+                session.getTotalCost()
         );
     }
 
@@ -393,4 +443,38 @@ public class ParkingSessionService {
             );
         }
     }
+
+    private BigDecimal calculateCost(LocalDateTime start,
+                                     LocalDateTime end,
+                                     BigDecimal hourPrice,
+                                     Integer billingStepMinutes,
+                                     Integer freeMinutes) {
+
+        if (start == null || end == null || !end.isAfter(start)) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+        if (hourPrice == null || billingStepMinutes == null || billingStepMinutes <= 0) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        long totalMinutes = Duration.between(start, end).toMinutes();
+        int free = (freeMinutes == null) ? 0 : Math.max(0, freeMinutes);
+
+        long billableMinutes = totalMinutes - free;
+        if (billableMinutes <= 0) {
+            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+        }
+
+        long step = billingStepMinutes;
+        long steps = (billableMinutes + step - 1) / step;
+
+        BigDecimal stepPrice = hourPrice
+                .multiply(BigDecimal.valueOf(step))
+                .divide(BigDecimal.valueOf(60), 10, RoundingMode.HALF_UP);
+
+        BigDecimal total = stepPrice.multiply(BigDecimal.valueOf(steps));
+
+        return total.setScale(2, RoundingMode.HALF_UP);
+    }
+
 }

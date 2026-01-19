@@ -1,6 +1,7 @@
 package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
+import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
 import com.tms.ParkingManagementSystem.enums.SpotType;
 import com.tms.ParkingManagementSystem.enums.UserStatus;
@@ -9,7 +10,6 @@ import com.tms.ParkingManagementSystem.exception.ReservationConflictException;
 import com.tms.ParkingManagementSystem.exception.ReservationInUseException;
 import com.tms.ParkingManagementSystem.exception.ReservationNotFoundException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
-import com.tms.ParkingManagementSystem.exception.VehicleNotFoundException;
 import com.tms.ParkingManagementSystem.model.Reservation;
 import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.User;
@@ -20,7 +20,7 @@ import com.tms.ParkingManagementSystem.model.dto.ReservationUpdateDto;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
-import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import com.tms.ParkingManagementSystem.security.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -33,18 +33,18 @@ import java.util.List;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
-    private final VehicleRepository vehicleRepository;
     private final SpotRepository spotRepository;
     private final ParkingSessionRepository parkingSessionRepository;
+    private final SecurityUtil securityUtil;
 
     public ReservationService(ReservationRepository reservationRepository,
-                              VehicleRepository vehicleRepository,
                               SpotRepository spotRepository,
-                              ParkingSessionRepository parkingSessionRepository) {
+                              ParkingSessionRepository parkingSessionRepository,
+                              SecurityUtil securityUtil) {
         this.reservationRepository = reservationRepository;
-        this.vehicleRepository = vehicleRepository;
         this.spotRepository = spotRepository;
         this.parkingSessionRepository = parkingSessionRepository;
+        this.securityUtil = securityUtil;
     }
 
     private void expireOutdatedReservations() {
@@ -119,7 +119,6 @@ public class ReservationService {
         }
     }
 
-    @Transactional
     public List<Reservation> getAllReservations() {
         log.info("Get all reservations");
 
@@ -131,15 +130,19 @@ public class ReservationService {
         return reservations;
     }
 
-    @Transactional
     public Reservation getReservationById(Long id) {
         log.info("Get reservation by id = {}", id);
 
         expireOutdatedReservations();
 
-        return reservationRepository.findById(id)
+        Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
+
+        securityUtil.assertReservationOwnerOrAdmin(reservation);
+
+        return reservation;
     }
+
 
     @Transactional
     public Reservation createReservation(ReservationCreateDto dto) {
@@ -154,8 +157,13 @@ public class ReservationService {
             throw new IllegalArgumentException("Reservation end time must be after start time");
         }
 
-        Vehicle vehicle = vehicleRepository.findById(dto.getVehicleId())
-                .orElseThrow(() -> new VehicleNotFoundException(dto.getVehicleId()));
+        Vehicle vehicle = securityUtil.assertVehicleOwnerOrAdmin(dto.getVehicleId());
+
+        if (parkingSessionRepository.existsByVehicleIdAndStatus(vehicle.getId(), SessionStatus.ACTIVE)) {
+            throw new ReservationConflictException(
+                    "Vehicle id = " + vehicle.getId() + " already has an active parking session"
+            );
+        }
 
         User user = vehicle.getUser();
         log.debug("Reservation vehicle found, vehicleId = {}, userId = {}", vehicle.getId(), user.getId());
@@ -222,6 +230,9 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
+
+        securityUtil.assertReservationOwnerOrAdmin(reservation);
+
         if (reservation.getStatus() != ReservationStatus.ACTIVE) {
             log.warn("Reservation update denied: not ACTIVE, id = {}, status = {}",
                     reservation.getId(), reservation.getStatus());
@@ -248,6 +259,12 @@ public class ReservationService {
             );
         }
 
+        if (parkingSessionRepository.existsByReservationId(reservation.getId())) {
+            throw new ReservationConflictException(
+                    "Cannot update reservation already used by a parking session, id = " + reservation.getId()
+            );
+        }
+
         reservation.setEndTime(dto.getEndTime());
         reservation.setChanged(LocalDateTime.now());
 
@@ -256,6 +273,7 @@ public class ReservationService {
         log.info("Reservation updated, id = {}", saved.getId());
         return saved;
     }
+
 
     @Transactional
     public Reservation changeStatus(Long id, ReservationStatusUpdateDto dto) {
@@ -294,23 +312,16 @@ public class ReservationService {
         return true;
     }
 
-    @Transactional
     public List<Reservation> getReservationsByVehicleId(Long vehicleId) {
         log.info("Get reservations by vehicleId = {}", vehicleId);
 
+        securityUtil.assertVehicleOwnerOrAdmin(vehicleId);
         expireOutdatedReservations();
 
-        if (!vehicleRepository.existsById(vehicleId)) {
-            throw new VehicleNotFoundException(vehicleId);
-        }
-
-        List<Reservation> reservations = reservationRepository.findByVehicleId(vehicleId);
-        log.info("Found {} reservations for vehicleId = {}", reservations.size(), vehicleId);
-
-        return reservations;
+        return reservationRepository.findByVehicleId(vehicleId);
     }
 
-    @Transactional
+
     public List<Reservation> getReservationsBySpotId(Long spotId) {
         log.info("Get reservations by spotId = {}", spotId);
 
@@ -335,22 +346,27 @@ public class ReservationService {
         Reservation reservation = reservationRepository.findById(id)
                 .orElseThrow(() -> new ReservationNotFoundException(id));
 
-        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
-            log.warn("Reservation cancel denied: not ACTIVE, id = {}, status = {}",
-                    reservation.getId(), reservation.getStatus());
-            throw new ReservationConflictException("Only ACTIVE reservations can be cancelled");
+        securityUtil.assertReservationOwnerOrAdmin(reservation);
+
+        if (reservation.getStatus() == ReservationStatus.CANCELLED) {
+            return reservation;
         }
 
-        if (parkingSessionRepository.existsByReservationId(id)) {
-            throw new ReservationInUseException(id);
+        if (reservation.getStatus() == ReservationStatus.EXPIRED) {
+            throw new ReservationConflictException("Cannot cancel EXPIRED reservation, id = " + id);
         }
 
+        if (parkingSessionRepository.existsByReservationId(reservation.getId())) {
+            throw new ReservationConflictException("Cannot cancel reservation already used by a parking session, id = " + id);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
         reservation.setStatus(ReservationStatus.CANCELLED);
-        reservation.setChanged(LocalDateTime.now());
+        reservation.setChanged(now);
 
         Reservation saved = reservationRepository.save(reservation);
-        log.info("Reservation cancelled, id = {}", saved.getId());
 
+        log.info("Reservation cancelled, id = {}", id);
         return saved;
     }
 

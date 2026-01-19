@@ -8,6 +8,7 @@ import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.dto.TariffCreateUpdateDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.TariffRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,7 @@ public class TariffService {
                 .orElseThrow(() -> new TariffNotFoundException(id));
     }
 
+    @Transactional
     public Tariff createTariff(TariffCreateUpdateDto tariffDto) {
         log.info("Create tariff");
         log.debug("Create tariff payload = {}", tariffDto);
@@ -65,6 +67,7 @@ public class TariffService {
         return saved;
     }
 
+    @Transactional
     public Tariff updateTariff(Long id, TariffCreateUpdateDto tariffDto) {
         log.info("Update tariff, id = {}", id);
         log.debug("Update tariff payload = {}", tariffDto);
@@ -89,6 +92,7 @@ public class TariffService {
         return saved;
     }
 
+    @Transactional
     public boolean deleteTariffById(Long id) {
         log.info("Delete tariff, id = {}", id);
 

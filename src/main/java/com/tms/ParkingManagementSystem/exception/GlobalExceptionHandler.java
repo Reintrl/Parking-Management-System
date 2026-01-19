@@ -96,4 +96,21 @@ public class GlobalExceptionHandler {
                 "message", "Unexpected error occurred"
         ));
     }
+
+    //403 FORBIDDEN
+    @ExceptionHandler({
+            SessionAccessDeniedException.class,
+            UserNotActiveException.class,
+            ReservationAccessDeniedException.class,
+            VehicleAccessDeniedException.class,
+            UserVehicleNotFoundException.class
+    })
+    public ResponseEntity<?> handleForbidden(SessionAccessDeniedException ex) {
+        return ResponseEntity
+                .status(HttpStatus.FORBIDDEN)
+                .body(Map.of(
+                        "error", "SESSION_ACCESS_DENIED",
+                        "message", ex.getMessage()
+                ));
+    }
 }

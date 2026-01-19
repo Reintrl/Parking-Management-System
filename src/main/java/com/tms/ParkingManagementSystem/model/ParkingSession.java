@@ -19,6 +19,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -62,6 +63,9 @@ public class ParkingSession {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "reservation_id")
     private Reservation reservation;
+
+    @Column(name = "total_cost", precision = 10, scale = 2)
+    private BigDecimal totalCost;
 
     @AssertTrue(message = "End time must be after start time")
     private boolean isEndTimeValid() {

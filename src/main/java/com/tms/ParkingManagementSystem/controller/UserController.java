@@ -101,4 +101,9 @@ public class UserController {
         log.info("User status updated id = {}", id);
         return ResponseEntity.ok(updated);
     }
+
+    @PatchMapping("/soft/{id}")
+    public Boolean softDeleteUser(@PathVariable Long id) {
+        return userService.softDeleteUser(id);
+    }
 }

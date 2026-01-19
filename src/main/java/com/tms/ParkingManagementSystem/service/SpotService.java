@@ -16,6 +16,7 @@ import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -53,6 +54,7 @@ public class SpotService {
                 .orElseThrow(() -> new SpotNotFoundException(id));
     }
 
+    @Transactional
     public Spot createSpot(SpotCreateDto dto) {
         log.info("Create spot");
         log.debug("Create spot payload = {}", dto);
@@ -76,6 +78,7 @@ public class SpotService {
         return saved;
     }
 
+    @Transactional
     public Spot updateSpot(Long id, SpotUpdateDto dto) {
         log.info("Update spot, id = {}", id);
         log.debug("Update spot payload = {}", dto);
@@ -92,6 +95,7 @@ public class SpotService {
         return saved;
     }
 
+    @Transactional
     public Spot changeStatus(Long id, SpotStatusUpdateDto dto) {
         log.info("Change spot status, id = {}, status = {}", id, dto.getStatus());
         log.debug("Change spot status payload = {}", dto);
@@ -108,6 +112,7 @@ public class SpotService {
         return saved;
     }
 
+    @Transactional
     public boolean deleteSpotById(Long id) {
         log.info("Delete spot, id = {}", id);
 
