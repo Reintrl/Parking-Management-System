@@ -1,12 +1,17 @@
 package com.tms.ParkingManagementSystem.controller;
 
+import com.tms.ParkingManagementSystem.enums.SpotType;
 import com.tms.ParkingManagementSystem.model.ParkingLot;
+import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateWithSpotsDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingLotDashboardDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotUpdateStatusDto;
 import com.tms.ParkingManagementSystem.service.ParkingLotService;
+import com.tms.ParkingManagementSystem.service.SpotService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,8 +22,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Slf4j
@@ -26,9 +33,11 @@ import java.util.List;
 @RequestMapping("/parkingLot")
 public class ParkingLotController {
     private final ParkingLotService parkingLotService;
+    private final SpotService spotService;
 
-    public ParkingLotController(ParkingLotService parkingLotService) {
+    public ParkingLotController(ParkingLotService parkingLotService, SpotService spotService) {
         this.parkingLotService = parkingLotService;
+        this.spotService = spotService;
     }
 
     @GetMapping
@@ -102,6 +111,35 @@ public class ParkingLotController {
         ParkingLot created = parkingLotService.createParkingLotWithSpots(dto);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/{id}/spots/available")
+    public ResponseEntity<List<Spot>> getAvailableSpots(
+            @PathVariable Long id,
+            @RequestParam(required = false) SpotType type,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime from,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime to
+    ) {
+        log.info("Request: get available spots, parkingLotId = {}, type = {}, from = {}, to = {}",
+                id, type, from, to);
+
+        List<Spot> spots = spotService.getAvailableSpots(id, type, from, to);
+        if (spots.isEmpty()) {
+            log.warn("No available spots found, parkingLotId = {}", id);
+            return ResponseEntity.noContent().build();
+        }
+
+        log.info("Found {} available spots, parkingLotId = {}", spots.size(), id);
+        return ResponseEntity.ok(spots);
+    }
+
+    @GetMapping("/{id}/dashboard")
+    public ResponseEntity<ParkingLotDashboardDto> getDashboard(@PathVariable Long id) {
+        log.info("Request: get parking lot dashboard, parkingLotId = {}", id);
+        ParkingLotDashboardDto dashboard = parkingLotService.getDashboard(id);
+        return ResponseEntity.ok(dashboard);
     }
 
 }

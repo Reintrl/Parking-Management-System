@@ -10,8 +10,11 @@ import java.util.List;
 
 @Repository
 public interface ReservationRepository extends JpaRepository<Reservation, Long> {
+
     List<Reservation> findByVehicleId(Long vehicleId);
+
     List<Reservation> findBySpotId(Long spotId);
+
     boolean existsBySpotIdAndStatusAndStartTimeLessThanAndEndTimeGreaterThan(
             Long spotId,
             ReservationStatus status,
@@ -19,12 +22,15 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDateTime startTime
     );
     List<Reservation> findByStatusAndEndTimeBefore(ReservationStatus status, LocalDateTime time);
+
     boolean existsBySpotIdAndStatusAndEndTimeAfter(Long spotId, ReservationStatus status, LocalDateTime time);
+
     boolean existsByVehicleIdAndStatusAndEndTimeAfter(
             Long vehicleId,
             ReservationStatus status,
             LocalDateTime time
     );
+
     boolean existsBySpotIdAndStatusAndIdNotAndStartTimeLessThanAndEndTimeGreaterThan(
             Long spotId,
             ReservationStatus status,
@@ -32,4 +38,11 @@ public interface ReservationRepository extends JpaRepository<Reservation, Long> 
             LocalDateTime endTime,
             LocalDateTime startTime
     );
+
+    long countBySpotParkingLotIdAndStatusAndEndTimeAfter(
+            Long parkingLotId,
+            ReservationStatus status,
+            LocalDateTime time
+    );
+
 }

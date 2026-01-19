@@ -325,4 +325,33 @@ public class ReservationService {
 
         return reservations;
     }
+
+    @Transactional
+    public Reservation cancelReservation(Long id) {
+        log.info("Cancel reservation, id = {}", id);
+
+        expireOutdatedReservations();
+
+        Reservation reservation = reservationRepository.findById(id)
+                .orElseThrow(() -> new ReservationNotFoundException(id));
+
+        if (reservation.getStatus() != ReservationStatus.ACTIVE) {
+            log.warn("Reservation cancel denied: not ACTIVE, id = {}, status = {}",
+                    reservation.getId(), reservation.getStatus());
+            throw new ReservationConflictException("Only ACTIVE reservations can be cancelled");
+        }
+
+        if (parkingSessionRepository.existsByReservationId(id)) {
+            throw new ReservationInUseException(id);
+        }
+
+        reservation.setStatus(ReservationStatus.CANCELLED);
+        reservation.setChanged(LocalDateTime.now());
+
+        Reservation saved = reservationRepository.save(reservation);
+        log.info("Reservation cancelled, id = {}", saved.getId());
+
+        return saved;
+    }
+
 }

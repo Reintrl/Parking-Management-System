@@ -125,4 +125,12 @@ public class ReservationController {
         log.info("Found {} reservations for spotId = {}", reservations.size(), spotId);
         return ResponseEntity.ok(reservations);
     }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Reservation> cancelReservation(@PathVariable Long id) {
+        log.info("Request: cancel reservation id = {}", id);
+        Reservation updated = reservationService.cancelReservation(id);
+        log.info("Reservation cancelled id = {}", id);
+        return ResponseEntity.ok(updated);
+    }
 }

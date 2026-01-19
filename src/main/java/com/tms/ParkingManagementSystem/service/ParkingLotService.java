@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
+import com.tms.ParkingManagementSystem.enums.SpotStatus;
 import com.tms.ParkingManagementSystem.enums.SpotType;
 import com.tms.ParkingManagementSystem.enums.TariffStatus;
 import com.tms.ParkingManagementSystem.exception.AddressAlreadyExistsException;
@@ -13,6 +14,7 @@ import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.Tariff;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateUpdateDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotCreateWithSpotsDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingLotDashboardDto;
 import com.tms.ParkingManagementSystem.model.dto.ParkingLotUpdateStatusDto;
 import com.tms.ParkingManagementSystem.repository.ParkingLotRepository;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
@@ -231,5 +233,35 @@ public class ParkingLotService {
 
         return createdLot;
     }
+
+    public ParkingLotDashboardDto getDashboard(Long parkingLotId) {
+        log.info("Get parking lot dashboard, parkingLotId = {}", parkingLotId);
+
+        if (!parkingLotRepository.existsById(parkingLotId)) {
+            throw new ParkingLotNotFoundException(parkingLotId);
+        }
+
+        long totalSpots = spotRepository.countByParkingLotId(parkingLotId);
+
+        long availableSpots = spotRepository.countByParkingLotIdAndStatus(parkingLotId, SpotStatus.AVAILABLE);
+        long occupiedSpots = spotRepository.countByParkingLotIdAndStatus(parkingLotId, SpotStatus.OCCUPIED);
+        long reservedSpots = spotRepository.countByParkingLotIdAndStatus(parkingLotId, SpotStatus.RESERVED);
+        long outOfServiceSpots = spotRepository.countByParkingLotIdAndStatus(parkingLotId, SpotStatus.OUT_OF_SERVICE);
+
+        LocalDateTime now = LocalDateTime.now();
+        long activeReservations = reservationRepository.countBySpotParkingLotIdAndStatusAndEndTimeAfter(
+                parkingLotId, ReservationStatus.ACTIVE, now
+        );
+
+        long activeSessions = parkingSessionRepository.countBySpotParkingLotIdAndStatus(
+                parkingLotId, SessionStatus.ACTIVE
+        );
+
+        return new ParkingLotDashboardDto(
+                totalSpots, availableSpots, occupiedSpots, reservedSpots, outOfServiceSpots,
+                activeReservations, activeSessions
+        );
+    }
+
 
 }

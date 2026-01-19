@@ -2,6 +2,7 @@ package com.tms.ParkingManagementSystem.service;
 
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
+import com.tms.ParkingManagementSystem.enums.SpotType;
 import com.tms.ParkingManagementSystem.exception.ParkingLotNotFoundException;
 import com.tms.ParkingManagementSystem.exception.SpotInUseException;
 import com.tms.ParkingManagementSystem.exception.SpotNotFoundException;
@@ -141,4 +142,35 @@ public class SpotService {
         log.info("Found {} spots for parkingLotId = {}", spots.size(), parkingLotId);
         return spots;
     }
+
+    public List<Spot> getAvailableSpots(
+            Long parkingLotId,
+            SpotType type,
+            LocalDateTime from,
+            LocalDateTime to
+    ) {
+        log.info("Get available spots, parkingLotId = {}, type = {}, from = {}, to = {}",
+                parkingLotId, type, from, to);
+
+        if (!parkingLotRepository.existsById(parkingLotId)) {
+            throw new ParkingLotNotFoundException(parkingLotId);
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime effectiveFrom = from != null ? from : now;
+        LocalDateTime effectiveTo = to != null ? to : effectiveFrom;
+
+        if (effectiveTo.isBefore(effectiveFrom)) {
+            throw new IllegalArgumentException("to must not be before from");
+        }
+
+        return spotRepository.findAvailableSpots(
+                parkingLotId,
+                type,
+                effectiveFrom,
+                effectiveTo,
+                SessionStatus.ACTIVE
+        );
+    }
+
 }

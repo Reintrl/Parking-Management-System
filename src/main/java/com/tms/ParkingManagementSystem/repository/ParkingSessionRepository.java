@@ -19,4 +19,7 @@ public interface ParkingSessionRepository extends JpaRepository<ParkingSession, 
     List<ParkingSession> findBySpotId(Long spotId);
 
     List<ParkingSession> findByVehicleId(Long vehicleId);
+
+    long countBySpotParkingLotIdAndStatus(Long parkingLotId, SessionStatus status);
+
 }
