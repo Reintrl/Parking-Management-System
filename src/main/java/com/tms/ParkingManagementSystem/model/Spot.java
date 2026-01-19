@@ -1,5 +1,6 @@
 package com.tms.ParkingManagementSystem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tms.ParkingManagementSystem.enums.SpotStatus;
 import com.tms.ParkingManagementSystem.enums.SpotType;
 import jakarta.persistence.Column;
@@ -30,6 +31,7 @@ import java.time.LocalDateTime;
         indexes = {
                 @Index(name = "ix_spots_parking_lot_id", columnList = "parking_lot_id")
         })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor

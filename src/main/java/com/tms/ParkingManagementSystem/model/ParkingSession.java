@@ -1,5 +1,6 @@
 package com.tms.ParkingManagementSystem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tms.ParkingManagementSystem.enums.SessionStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
         @Index(name = "ix_sessions_spot_status", columnList = "spot_id, status"),
         @Index(name = "ix_sessions_vehicle_status", columnList = "vehicle_id, status")
 })
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor

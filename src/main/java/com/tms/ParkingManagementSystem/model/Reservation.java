@@ -1,5 +1,6 @@
 package com.tms.ParkingManagementSystem.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tms.ParkingManagementSystem.enums.ReservationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -21,6 +22,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "reservations")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Data
 @NoArgsConstructor(force = true)
 @RequiredArgsConstructor

@@ -17,6 +17,10 @@ import com.tms.ParkingManagementSystem.model.Spot;
 import com.tms.ParkingManagementSystem.model.User;
 import com.tms.ParkingManagementSystem.model.Vehicle;
 import com.tms.ParkingManagementSystem.model.dto.ParkingSessionCreateDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingSessionResponseDto;
+import com.tms.ParkingManagementSystem.model.dto.ReservationShortDto;
+import com.tms.ParkingManagementSystem.model.dto.SpotShortDto;
+import com.tms.ParkingManagementSystem.model.dto.VehicleShortDto;
 import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.SpotRepository;
@@ -47,9 +51,46 @@ public class ParkingSessionService {
         this.reservationRepository = reservationRepository;
     }
 
-    public List<ParkingSession> getAllSessions() {
-        log.info("Get all parking sessions");
-        return parkingSessionRepository.findAll();
+
+    public List<ParkingSessionResponseDto> getAllSessionsDto() {
+        log.info("Get all parking sessions (DTO)");
+        return parkingSessionRepository.findAll().stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public ParkingSessionResponseDto getSessionByIdDto(Long id) {
+        log.info("Get parking session by id (DTO) = {}", id);
+        return toDto(getSessionById(id));
+    }
+
+    @Transactional
+    public ParkingSessionResponseDto createSessionDto(ParkingSessionCreateDto dto) {
+        ParkingSession created = createSession(dto);
+        return toDto(created);
+    }
+
+    public ParkingSessionResponseDto createSessionFromReservationDto(Long reservationId) {
+        ParkingSession created = createSessionFromReservation(reservationId);
+        return toDto(created);
+    }
+
+    public List<ParkingSessionResponseDto> getSessionsBySpotIdDto(Long spotId) {
+        return getSessionsBySpotId(spotId).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    public List<ParkingSessionResponseDto> getSessionsByVehicleIdDto(Long vehicleId) {
+        return getSessionsByVehicleId(vehicleId).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    @Transactional
+    public ParkingSessionResponseDto finishSessionDto(Long id) {
+        ParkingSession finished = finishSession(id);
+        return toDto(finished);
     }
 
     public ParkingSession getSessionById(Long id) {
@@ -252,7 +293,7 @@ public class ParkingSessionService {
         spotRepository.save(spot);
 
         Reservation reservation = session.getReservation();
-        if(reservation != null) {
+        if (reservation != null) {
             reservation.setStatus(ReservationStatus.EXPIRED);
             reservation.setChanged(now);
             reservationRepository.save(reservation);
@@ -265,6 +306,48 @@ public class ParkingSessionService {
         log.info("Parking session finished, id = {}", saved.getId());
 
         return saved;
+    }
+
+    private ParkingSessionResponseDto toDto(ParkingSession session) {
+        if (session == null) {
+            return null;
+        }
+
+        Vehicle v = session.getVehicle();
+        Spot s = session.getSpot();
+        Reservation r = session.getReservation();
+
+        VehicleShortDto vehicleDto = new VehicleShortDto(
+                v.getId(),
+                v.getPlateNumber(),
+                v.getType()
+        );
+
+        SpotShortDto spotDto = new SpotShortDto(
+                s.getId(),
+                s.getNumber(),
+                s.getLevel(),
+                s.getType(),
+                s.getParkingLot().getId(),
+                s.getParkingLot().getName()
+        );
+
+        ReservationShortDto reservationDto = (r == null) ? null : new ReservationShortDto(
+                r.getId(),
+                r.getStatus(),
+                r.getStartTime(),
+                r.getEndTime()
+        );
+
+        return new ParkingSessionResponseDto(
+                session.getId(),
+                session.getStatus(),
+                session.getStartTime(),
+                session.getEndTime(),
+                vehicleDto,
+                spotDto,
+                reservationDto
+        );
     }
 
     private void validateUserAndSpotRulesForSession(Vehicle vehicle, Spot spot) {

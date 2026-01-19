@@ -1,7 +1,7 @@
 package com.tms.ParkingManagementSystem.controller;
 
-import com.tms.ParkingManagementSystem.model.ParkingSession;
 import com.tms.ParkingManagementSystem.model.dto.ParkingSessionCreateDto;
+import com.tms.ParkingManagementSystem.model.dto.ParkingSessionResponseDto;
 import com.tms.ParkingManagementSystem.service.ParkingSessionService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +29,9 @@ public class ParkingSessionController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ParkingSession>> getAllSessions() {
+    public ResponseEntity<List<ParkingSessionResponseDto>> getAllSessions() {
         log.info("Request: get all parking sessions");
-        List<ParkingSession> sessions = parkingSessionService.getAllSessions();
+        List<ParkingSessionResponseDto> sessions = parkingSessionService.getAllSessionsDto();
         if (sessions.isEmpty()) {
             log.warn("No parking sessions found");
             return ResponseEntity.noContent().build();
@@ -41,26 +41,26 @@ public class ParkingSessionController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ParkingSession> getSessionById(@PathVariable Long id) {
+    public ResponseEntity<ParkingSessionResponseDto> getSessionById(@PathVariable Long id) {
         log.info("Request: get parking session by id = {}", id);
-        ParkingSession session = parkingSessionService.getSessionById(id);
+        ParkingSessionResponseDto session = parkingSessionService.getSessionByIdDto(id);
         log.info("Parking session found id = {}", id);
         return ResponseEntity.ok(session);
     }
 
     @PostMapping
-    public ResponseEntity<ParkingSession> createSession(@Valid @RequestBody ParkingSessionCreateDto dto) {
+    public ResponseEntity<ParkingSessionResponseDto> createSession(@Valid @RequestBody ParkingSessionCreateDto dto) {
         log.info("Request: create parking session");
         log.debug("Create session payload: {}", dto);
-        ParkingSession created = parkingSessionService.createSession(dto);
+        ParkingSessionResponseDto created = parkingSessionService.createSessionDto(dto);
         log.info("Parking session created id = {}", created.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @PostMapping("/from-reservation/{reservationId}")
-    public ResponseEntity<ParkingSession> createSessionFromReservation(@PathVariable Long reservationId) {
+    public ResponseEntity<ParkingSessionResponseDto> createSessionFromReservation(@PathVariable Long reservationId) {
         log.info("Request: create parking session from reservation id = {}", reservationId);
-        ParkingSession created = parkingSessionService.createSessionFromReservation(reservationId);
+        ParkingSessionResponseDto created = parkingSessionService.createSessionFromReservationDto(reservationId);
         log.info("Parking session created from reservation id = {}, sessionId = {}", reservationId, created.getId());
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -78,22 +78,21 @@ public class ParkingSessionController {
     }
 
     @GetMapping("/spot/{spotId}")
-    public ResponseEntity<List<ParkingSession>> getSessionsBySpotId(@PathVariable Long spotId) {
+    public ResponseEntity<List<ParkingSessionResponseDto>> getSessionsBySpotId(@PathVariable Long spotId) {
         log.info("Request: get parking sessions by spotId = {}", spotId);
-        List<ParkingSession> sessions = parkingSessionService.getSessionsBySpotId(spotId);
+        List<ParkingSessionResponseDto> sessions = parkingSessionService.getSessionsBySpotIdDto(spotId);
         if (sessions.isEmpty()) {
             log.warn("No parking sessions found for spotId = {}", spotId);
             return ResponseEntity.noContent().build();
         }
-        log.info("Found {} parking sessions for spotId = {}",
-                sessions.size(), spotId);
+        log.info("Found {} parking sessions for spotId = {}", sessions.size(), spotId);
         return ResponseEntity.ok(sessions);
     }
 
     @GetMapping("/vehicle/{vehicleId}")
-    public ResponseEntity<List<ParkingSession>> getSessionsByVehicleId(@PathVariable Long vehicleId) {
+    public ResponseEntity<List<ParkingSessionResponseDto>> getSessionsByVehicleId(@PathVariable Long vehicleId) {
         log.info("Request: get parking sessions by vehicleId = {}", vehicleId);
-        List<ParkingSession> sessions = parkingSessionService.getSessionsByVehicleId(vehicleId);
+        List<ParkingSessionResponseDto> sessions = parkingSessionService.getSessionsByVehicleIdDto(vehicleId);
         if (sessions.isEmpty()) {
             log.warn("No parking sessions found for vehicleId = {}", vehicleId);
             return ResponseEntity.noContent().build();
@@ -103,9 +102,9 @@ public class ParkingSessionController {
     }
 
     @PostMapping("/{id}/finish")
-    public ResponseEntity<ParkingSession> finishSession(@PathVariable Long id) {
+    public ResponseEntity<ParkingSessionResponseDto> finishSession(@PathVariable Long id) {
         log.info("Request: finish parking session id = {}", id);
-        ParkingSession finished = parkingSessionService.finishSession(id);
+        ParkingSessionResponseDto finished = parkingSessionService.finishSessionDto(id);
         log.info("Parking session finished id = {}", id);
         return ResponseEntity.ok(finished);
     }
