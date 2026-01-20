@@ -12,7 +12,6 @@ import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
-import java.util.Map;
 
 @Service
 public class JwtService {
@@ -36,9 +35,6 @@ public class JwtService {
 
         return Jwts.builder()
                 .subject(sec.getUsername())
-                .claims(Map.of(
-                        "role", sec.getRole().name()
-                ))
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(exp))
                 .signWith(key)

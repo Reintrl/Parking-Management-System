@@ -40,4 +40,7 @@ public class SecurityService {
         return securityRepository.setOperatorRoleByUserId(id) > 0;
     }
 
+    public List<Security> getAllSecurities() {
+        return securityRepository.findAll();
+    }
 }

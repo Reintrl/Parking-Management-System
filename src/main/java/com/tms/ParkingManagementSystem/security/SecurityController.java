@@ -70,4 +70,13 @@ public class SecurityController {
         }
         return ResponseEntity.status(HttpStatus.CONFLICT).build();
     }
+
+    @GetMapping
+    public ResponseEntity<List<Security>> getAllSecurity() {
+        List<Security> securities = securityService.getAllSecurities();
+        if (securities.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(securities);
+    }
 }

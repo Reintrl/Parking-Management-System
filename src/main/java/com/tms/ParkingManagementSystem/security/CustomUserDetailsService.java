@@ -1,5 +1,6 @@
 package com.tms.ParkingManagementSystem.security;
 
+import com.tms.ParkingManagementSystem.model.Security;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.*;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        var sec = securityRepository.findByUsername(username)
+        Security sec = securityRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
 
         return new User(
