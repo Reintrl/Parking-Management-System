@@ -25,7 +25,8 @@ public class GlobalExceptionHandler {
             ParkingLotNotFoundException.class,
             SpotNotFoundException.class,
             ReservationNotFoundException.class,
-            ParkingSessionNotFoundException.class
+            ParkingSessionNotFoundException.class,
+            SecurityNotFoundException.class
     })
     public ResponseEntity<Map<String, Object>> handleNotFound(RuntimeException ex) {
         log.warn("NOT_FOUND: {}", ex.getMessage());
@@ -50,7 +51,8 @@ public class GlobalExceptionHandler {
             VehicleInUseException.class,
             ParkingLotInUseException.class,
             UserInUseException.class,
-            ReservationConflictException.class
+            ReservationConflictException.class,
+            UsernameAlreadyExistsException.class
     })
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
         log.warn("CONFLICT: {}", ex.getMessage());

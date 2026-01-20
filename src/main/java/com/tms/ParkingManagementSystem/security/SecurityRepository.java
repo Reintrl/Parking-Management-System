@@ -1,7 +1,6 @@
     package com.tms.ParkingManagementSystem.security;
 
     import com.tms.ParkingManagementSystem.model.Security;
-    import com.tms.ParkingManagementSystem.model.User;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.data.jpa.repository.Modifying;
     import org.springframework.data.jpa.repository.Query;
@@ -34,4 +33,6 @@
         int setUserRoleByUserId(Long userId);
 
         void deleteByUserId(Long userId);
+
+        boolean existsByUsernameAndIdNot(String username, Long excludedUserId);
     }

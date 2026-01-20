@@ -1,7 +1,6 @@
 package com.tms.ParkingManagementSystem.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.tms.ParkingManagementSystem.enums.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
