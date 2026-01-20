@@ -17,6 +17,7 @@ import com.tms.ParkingManagementSystem.repository.ParkingSessionRepository;
 import com.tms.ParkingManagementSystem.repository.ReservationRepository;
 import com.tms.ParkingManagementSystem.repository.UserRepository;
 import com.tms.ParkingManagementSystem.repository.VehicleRepository;
+import com.tms.ParkingManagementSystem.security.SecurityRepository;
 import com.tms.ParkingManagementSystem.security.SecurityUtil;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -34,17 +35,20 @@ public class UserService {
     private final ParkingSessionRepository parkingSessionRepository;
     private final ReservationRepository reservationRepository;
     private final SecurityUtil securityUtil;
+    private final SecurityRepository securityRepository;
 
     public UserService(UserRepository userRepository,
                        VehicleRepository vehicleRepository,
                        ParkingSessionRepository parkingSessionRepository,
                        ReservationRepository reservationRepository,
-                       SecurityUtil securityUtil) {
+                       SecurityUtil securityUtil,
+                       SecurityRepository securityRepository) {
         this.userRepository = userRepository;
         this.vehicleRepository = vehicleRepository;
         this.parkingSessionRepository = parkingSessionRepository;
         this.reservationRepository = reservationRepository;
         this.securityUtil = securityUtil;
+        this.securityRepository = securityRepository;
     }
 
     public List<User> getAllUsers() {
@@ -122,6 +126,7 @@ public class UserService {
 
         vehicleRepository.deleteAllByUserId(userId);
         userRepository.deleteById(userId);
+        securityRepository.deleteByUserId(userId);
 
         log.info("User deleted, id = {}", userId);
         return true;

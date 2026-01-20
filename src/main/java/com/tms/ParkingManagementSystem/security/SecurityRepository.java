@@ -1,6 +1,7 @@
     package com.tms.ParkingManagementSystem.security;
 
     import com.tms.ParkingManagementSystem.model.Security;
+    import com.tms.ParkingManagementSystem.model.User;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.data.jpa.repository.Modifying;
     import org.springframework.data.jpa.repository.Query;
@@ -31,4 +32,6 @@
         @Modifying
         @Query(nativeQuery = true, value = "UPDATE security SET role = 'USER' WHERE user_id = :userId")
         int setUserRoleByUserId(Long userId);
+
+        void deleteByUserId(Long userId);
     }
