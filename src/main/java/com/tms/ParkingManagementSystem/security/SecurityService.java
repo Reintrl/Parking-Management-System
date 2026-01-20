@@ -43,4 +43,11 @@ public class SecurityService {
     public List<Security> getAllSecurities() {
         return securityRepository.findAll();
     }
+
+    public Boolean setRoleToUser(Long id) {
+        if (!userRepository.existsById(id)) {
+            throw new UserNotFoundException(id);
+        }
+        return securityRepository.setUserRoleByUserId(id) > 0;
+    }
 }

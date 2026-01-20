@@ -79,4 +79,12 @@ public class SecurityController {
         }
         return ResponseEntity.ok(securities);
     }
+
+    @PostMapping("/{id}/user")
+    public ResponseEntity<HttpStatusCode> setRoleToUser(@PathVariable Long id) {
+        if (securityService.setRoleToUser(id)) {
+            return ResponseEntity.noContent().build();
+        }
+        return ResponseEntity.status(HttpStatus.CONFLICT).build();
+    }
 }

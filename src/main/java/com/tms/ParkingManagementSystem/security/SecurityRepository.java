@@ -26,4 +26,9 @@
         @Modifying
         @Query(nativeQuery = true, value = "UPDATE security SET role = 'OPERATOR' WHERE user_id = :userId")
         int setOperatorRoleByUserId(Long userId);
+
+        @Transactional
+        @Modifying
+        @Query(nativeQuery = true, value = "UPDATE security SET role = 'USER' WHERE user_id = :userId")
+        int setUserRoleByUserId(Long userId);
     }
