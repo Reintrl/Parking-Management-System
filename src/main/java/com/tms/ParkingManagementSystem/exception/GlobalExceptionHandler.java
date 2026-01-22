@@ -91,7 +91,7 @@ public class GlobalExceptionHandler {
     //500 INTERNAL SERVER ERROR
 
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, Object>> handleUnexpected(RuntimeException ex) {
+    public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
         log.error("UNEXPECTED_ERROR", ex);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
                 "error", "INTERNAL_SERVER_ERROR",

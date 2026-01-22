@@ -24,8 +24,5 @@ public class ReservationCreateDto {
     @FutureOrPresent(message = "Reservation end time cannot be in the past")
     private LocalDateTime endTime;
 
-    @AssertTrue(message = "Reservation end time must be after start time")
-    private boolean isReservationTimeValid() {
-        return startTime == null || endTime == null || endTime.isAfter(startTime);
-    }
+
 }
