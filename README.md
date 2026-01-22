@@ -1,26 +1,27 @@
-  # Parking Management System
-  
-  Backend-приложение для управления парковочной системой: пользователи, транспорт, парковки, места, тарифы, бронирования и парковочные сессии.  
-  Проект реализован на **Spring Boot** с использованием **JWT-аутентификации** и **PostgreSQL**.
-  
-  ---
-  
-  ## Функциональные возможности
-  ## Технологический стек
-  
-  
-  - Управление пользователями и ролями
-  - Аутентификация и авторизация на основе JWT
-  - Управление транспортными средствами пользователей
-  - Управление парковками и парковочными местами
-  - Работа с тарифами (цена, шаг биллинга, бесплатные минуты)
-  - Бронирование парковочных мест
-  - Управление парковочными сессиями (открытие/закрытие)
-  - Проверки бизнес-логики и статусов сущностей
-  - Документация API через Swagger (OpenAPI)
+# Parking Management System
+
+Backend is an application for managing the parking system: users, transportation, parking, locations, fares, reservations and parking sessions.  
+  The project is implemented on **Spring Boot** using **JWT authentication** and **PostgreSQL**.
   
   ---
-  
+
+## Functionality
+
+## Technology Stack
+
+
+- User and Role Management
+- JWT-based authentication and authorization
+- User vehicle Management
+- Parking and parking space management
+- Work with tariffs (price, billing step, free minutes)
+- Booking parking spaces
+- Managing parking sessions (opening/closing)
+- Checking business logic and entity statuses
+- API documentation via Swagger (OpenAPI)
+
+---
+
   - Java 21
   - Spring Boot
   - Spring Security + JWT (jjwt)
@@ -29,30 +30,30 @@
   - Maven
   - Lombok
   - Swagger / OpenAPI
-  
-  ---
-  
-  ## Требования
+
+---
+
+## Requirements
   
   - JDK 21+
   - Maven 3.8+
   - PostgreSQL 14+
+
+---
+
+## Application Configuration
   
-  ---
+  The application uses the following environment settings:
   
-  ## Конфигурация приложения
+  | Variable | Assignment |
+|----------|-----------|
+  | `DB_URL` | JDBC database URL |
+  | `DB_USER` | PostgreSQL user |
+| `DB_PASS` | PostgreSQL Password |
+| `JWT_SECRET` | Secret key for JWT |
+| `JWT_EXPIRATION_SECONDS` | JWT lifetime in seconds |
   
-  Приложение использует следующие параметры окружения:
-  
-  | Переменная | Назначение |
-  |----------|-----------|
-  | `DB_URL` | JDBC URL базы данных |
-  | `DB_USER` | Пользователь PostgreSQL |
-  | `DB_PASS` | Пароль PostgreSQL |
-  | `JWT_SECRET` | Секретный ключ для JWT |
-  | `JWT_EXPIRATION_SECONDS` | Время жизни JWT в секундах |
-  
-  ### Пример `application.properties`
+  ### Example of `application.properties`
   
   ```properties
   spring.datasource.url=${DB_URL}
@@ -65,371 +66,371 @@
   spring.jpa.hibernate.ddl-auto=update
   spring.jpa.show-sql=false
   ```
-  # Запуск приложения
+  # Launching the app
   
-  ### Через Maven
+  ### Via Maven
   
   ```bash
   mvn clean spring-boot:run
   ```
   
-  ### Через JAR-файл
+  ### Via JAR file
   
   ```bash
   mvn clean package
   java -jar target/parking-management-system.jar
   ```
   
-  ### При успешном запуске приложение будет доступно по умолчанию на порту 8080.
-  
-  # Документация API (Swagger)
-  
-  ### Swagger UI автоматически подключён к проекту.
-  ### После запуска приложения документация доступна по адресу:
+  ### Upon successful launch, the application will be available by default on port 8080.
+
+  # API Documentation (Swagger)
+
+  ### Swagger UI is automatically connected to the project.
+  ### After launching the application, the documentation is available at:
   
   ```bash
   http://localhost:8080/swagger-ui/index.html
   ```
   
-  ### Swagger позволяет:
-  - просматривать все доступные эндпоинты,
-  - проверять модели запросов и ответов,
-  - выполнять запросы напрямую из браузера.
+  ### Swagger allows you to:
+  - view all available endpoints,
+  - check query and response models,
+  - execute requests directly from the browser.
   
-  # Аутентификация и авторизация
-  В проекте используется JWT (JSON Web Token) для аутентификации и контроля доступа.
-  ## Получение JWT
+  # Authentication and authorization
+  The project uses JWT (JSON Web Token) for authentication and access control.
+  ## Getting a JWT
   
-  ### JWT-токен выдаётся при успешной аутентификации пользователя.
-  Пример:
+  ## The # JWT token is issued upon successful user authentication.
+  Example:
   ```bash
   POST /auth/login
   ```
-  В ответе возвращается JWT, который необходимо использовать для доступа к защищённым эндпоинтам.
+  The response returns the JWT that must be used to access the protected endpoints.
   
-  # Использование JWT
-  ### Токен передаётся в HTTP-заголовке каждого запроса:
-  ```bash
-  Authorization: Bearer <JWT_TOKEN>
+  # Using JWT
+  ### The token is transmitted in the HTTP header of each request:
+```bash
+Authorization: Bearer <JWT_TOKEN>
   ```
   
-  # Основные сущности системы
+  # The main entities of the system
   
-  User — пользователь системы
+  User — the user of the system
   
-  Security — учетные данные пользователя (логин, пароль, роль)
+  Security — user credentials (login, password, role)
+
+  Vehicle — user's vehicle 
   
-  Vehicle — транспортное средство пользователя
+  ParkingLot — parking area
   
-  ParkingLot — парковочная площадка
+  Spot — parking space
   
-  Spot — парковочное место
+  Tariff — parking rate
   
-  Tariff — тариф парковки
+  Reservation — reservation of a parking space
   
-  Reservation — бронирование парковочного места
+  ParkingSession — active or completed parking session
   
-  ParkingSession — активная или завершённая парковочная сессия
+  # Project architecture
+  The project is built according to the classical layered architecture
   
-  # Архитектура проекта
-  Проект построен по классической слоистой архитектуре
+  ## Layer description
+  controller — REST controllers, HTTP request processing
+
+  service — business logic and transactions
+
+  repository — database access (Spring Data JPA)
   
-  ## Описание слоёв
-  controller — REST-контроллеры, обработка HTTP-запросов
+  model — JPA-entities
+
+  dto — data transfer objects
+
+  security — JWT, filters, Spring configuration Security
+
+  exception — custom exceptions and error handling
+
+# Business rules and checks
   
-  service — бизнес-логика и транзакции
-  
-  repository — доступ к базе данных (Spring Data JPA)
-  
-  model — JPA-сущности
-  
-  dto — объекты передачи данных
-  
-  security — JWT, фильтры, конфигурация Spring Security
-  
-  exception — пользовательские исключения и обработка ошибок
-  
-  # Бизнес-правила и проверки
-  
-  ## В проекте реализованы следующие проверки:
-  - уникальность номера транспортного средства;
-  - контроль статусов пользователей, тарифов и парковочных мест;
-  - запрет пересекающихся бронирований одного парковочного места;
-  - проверка корректности временных интервалов бронирований;
-  - ограничения на создание и завершение парковочных сессий.
+  ## The following checks have been implemented in the project:
+  - uniqueness of the vehicle number;
+  - control of user statuses, rates and parking spaces;
+  - prohibition of overlapping bookings of one parking space;
+  - checking the correctness of booking time intervals;
+  - restrictions on the creation and completion of parking sessions.
 
   # API Endpoints
   
-  ## Аутентификация и авторизация
-  *Все эндпоинты аутентификации доступны без авторизации*
+  ## Authentication and authorization
+  *All authentication endpoints are available without authorization*
   
-  ### `POST /auth/login`
-  - **Описание**: Аутентификация пользователя и получение JWT токена
-  - **Параметры тела запроса**: username, password
+### `POST /auth/login`
+  - **Description**: User authentication and receipt of the JWT token
+  - **Request body parameters**: username, password
+
+### `POST /auth/register`
+  - **Description**: Registration of a new user
+  - **Request body parameters**: username, password, email, and other user data
+
+## User endpoints
   
-  ### `POST /auth/register`
-  - **Описание**: Регистрация нового пользователя
-  - **Параметры тела запроса**: username, password, email, и другие данные пользователя
+  ### Profile of the current user (`/me')
+
+#### `GET /me`
+  - **Description**: Getting information about the currently authenticated user
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `PUT /me`
+  - **Description**: Updating the profile of the current user
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+### User Management (`/user`)
   
-  ## Пользовательские эндпоинты
+#### `GET /user`
+  - **Description**: Getting a list of all users
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `GET /user/{id}`
+  - **Description**: Getting a user by ID
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `POST /user`
+  - **Description**: Creating a new user
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PUT /user/{id}`
+  - **Description**: Full User Update
+  - **Required roles**: ADMIN
+
+#### `PATCH /user/{id}/status`
+  - **Description**: User status change
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PATCH /user/soft/{id}`
+  - **Description**: Soft User Removal
+  - **Required roles**: USER, ADMIN
+
+#### `DELETE /user/{id}`
+  - **Description**: Deleting a user
+  - **Required Roles**: ADMIN
+
+## Security Role Management (`/security`)
   
-  ### Профиль текущего пользователя (`/me`)
-  
-  #### `GET /me`
-  - **Описание**: Получение информации о текущем аутентифицированном пользователе
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `PUT /me`
-  - **Описание**: Обновление профиля текущего пользователя
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  ### Управление пользователями (`/user`)
-  
-  #### `GET /user`
-  - **Описание**: Получение списка всех пользователей
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `GET /user/{id}`
-  - **Описание**: Получение пользователя по ID
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `POST /user`
-  - **Описание**: Создание нового пользователя
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PUT /user/{id}`
-  - **Описание**: Полное обновление пользователя
-  - **Требуемые роли**: ADMIN
-  
-  #### `PATCH /user/{id}/status`
-  - **Описание**: Изменение статуса пользователя
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PATCH /user/soft/{id}`
-  - **Описание**: Мягкое удаление пользователя
-  - **Требуемые роли**: USER, ADMIN
-  
-  #### `DELETE /user/{id}`
-  - **Описание**: Удаление пользователя
-  - **Требуемые роли**: ADMIN
-  
-  ## Управление ролями безопасности (`/security`)
-  
-  *Все эндпоинты требуют роли ADMIN*
+  *All endpoints require the ADMIN role*
   
   #### `GET /security/{id}`
-  - **Описание**: Получение учетных данных безопасности по ID
-  
-  #### `GET /security/role/{role}`
-  - **Описание**: Получение всех пользователей по роли
+  - **Description**: Getting security credentials by ID
+
+#### `GET /security/role/{role}`
+  - **Description**: Getting all users by role
  
-  #### `POST /security/{id}/admin`
-  - **Описание**: Назначение роли ADMIN пользователю
+#### `POST /security/{id}/admin`
+  - **Description**: Assigning the ADMIN role to a user
   
-  #### `POST /security/{id}/operator`
-  - **Описание**: Назначение роли OPERATOR пользователю
+#### `POST /security/{id}/operator`
+  - **Description**: Assigning the OPERATOR role to the user
   
-  ## Транспортные средства (`/vehicle`)
-  
-  #### `GET /vehicle`
-  - **Описание**: Получение списка всех транспортных средств
-  - **Требуемые роли**: OPERATOR, ADMIN
+  ## Vehicles (`/vehicle`)
 
-  #### `GET /vehicle/{id}`
-  - **Описание**: Получение транспортного средства по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `POST /vehicle`
-  - **Описание**: Создание нового транспортного средства
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `PUT /vehicle/{id}`
-  - **Описание**: Обновление транспортного средства
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `DELETE /vehicle/{id}`
-  - **Описание**: Удаление транспортного средства
-  - **Требуемые роли**: USER, ADMIN
-  
-  #### `GET /vehicle/user/{userId}`
-  - **Описание**: Получение транспортных средств пользователя
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  ## Парковочные площадки (`/parkingLot`)
-  
-  #### `GET /parkingLot`
-  - **Описание**: Получение списка всех парковочных площадок
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `GET /parkingLot/{id}`
-  - **Описание**: Получение парковочной площадки по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `POST /parkingLot`
-  - **Описание**: Создание новой парковочной площадки
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `POST /parkingLot/with-spots`
-  - **Описание**: Создание парковочной площадки с местами
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PUT /parkingLot/{id}`
-  - **Описание**: Обновление парковочной площадки
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PATCH /parkingLot/{id}/status`
-  - **Описание**: Изменение статуса парковочной площадки
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `DELETE /parkingLot/{id}`
-  - **Описание**: Удаление парковочной площадки
-  - **Требуемые роли**: ADMIN
-  
-  #### `GET /parkingLot/{id}/spots/available`
-  - **Описание**: Получение доступных мест на парковке
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `GET /parkingLot/{id}/dashboard`
-  - **Описание**: Получение дашборда парковочной площадки
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  ## Парковочные места (`/spot`)
-  
-  #### `GET /spot`
-  - **Описание**: Получение списка всех парковочных мест
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `GET /spot/{id}`
-  - **Описание**: Получение парковочного места по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
+#### `GET /vehicle`
+  - **Description**: Getting a list of all vehicles
+  - **Required roles**: OPERATOR, ADMIN
 
-  #### `POST /spot`
-  - **Описание**: Создание нового парковочного места
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PUT /spot/{id}`
-  - **Описание**: Обновление парковочного места
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PATCH /spot/{id}/status`
-  - **Описание**: Изменение статуса парковочного места
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `DELETE /spot/{id}`
-  - **Описание**: Удаление парковочного места
-  - **Требуемые роли**: ADMIN
-  
-  #### `GET /spot/parkingLot/{parkingLotId}`
-  - **Описание**: Получение мест определенной парковочной площадки
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  ## Тарифы (`/tariff`)
-  
-  #### `GET /tariff`
-  - **Описание**: Получение списка всех тарифов
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `GET /tariff/{id}`
-  - **Описание**: Получение тарифа по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `POST /tariff`
-  - **Описание**: Создание нового тарифа
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `PUT /tariff/{id}`
-  - **Описание**: Обновление тарифа
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `DELETE /tariff/{id}`
-  - **Описание**: Удаление тарифа
-  - **Требуемые роли**: ADMIN
-  
-  ## Бронирования (`/reservation`)
-  
-  #### `GET /reservation`
-  - **Описание**: Получение списка всех бронирований
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `GET /reservation/{id}`
-  - **Описание**: Получение бронирования по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `POST /reservation`
-  - **Описание**: Создание нового бронирования
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `PUT /reservation/{id}`
-  - **Описание**: Обновление бронирования
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `PATCH /reservation/{id}/status`
-  - **Описание**: Изменение статуса бронирования
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `DELETE /reservation/{id}`
-  - **Описание**: Удаление бронирования
-  - **Требуемые роли**: ADMIN
-  
-  #### `POST /reservation/{id}/cancel`
-  - **Описание**: Отмена бронирования
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `GET /reservation/vehicle/{vehicleId}`
-  - **Описание**: Получение бронирований транспортного средства
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
+#### `GET /vehicle/{id}`
+  - **Description**: Getting a vehicle by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
 
-  #### `GET /reservation/spot/{spotId}`
-  - **Описание**: Получение бронирований парковочного места
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  ## Парковочные сессии (`/parkingSession`)
-  
-  #### `GET /parkingSession`
-  - **Описание**: Получение списка всех парковочных сессий
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `GET /parkingSession/{id}`
-  - **Описание**: Получение парковочной сессии по ID
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
-  
-  #### `POST /parkingSession`
-  - **Описание**: Создание новой парковочной сессии
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `POST /parkingSession/from-reservation/{reservationId}`
-  - **Описание**: Создание парковочной сессии из бронирования
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `POST /parkingSession/{id}/finish`
-  - **Описание**: Завершение парковочной сессии
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `DELETE /parkingSession/{id}`
-  - **Описание**: Удаление парковочной сессии
-  - **Требуемые роли**: ADMIN
-  
-  #### `GET /parkingSession/spot/{spotId}`
-  - **Описание**: Получение парковочных сессий места
-  - **Требуемые роли**: OPERATOR, ADMIN
-  
-  #### `GET /parkingSession/vehicle/{vehicleId}`
-  - **Описание**: Получение парковочных сессий транспортного средства
-  - **Требуемые роли**: USER, OPERATOR, ADMIN
+#### `POST/vehicle`
+  - **Description**: Creating a new vehicle
+  - **Required roles**: USER, OPERATOR, ADMIN
 
-  ## Коды ответов
-  Код	Описание
-  - 200 OK - Запрос выполнен успешно
-  - 201 Created	- Ресурс создан успешно
-  - 204 No Content - Запрос выполнен, но тело ответа отсутствует
-  - 400 Bad Request - Неверные параметры запроса
-  - 401 Unauthorized - Требуется аутентификация
-  - 403 Forbidden - Доступ запрещен (недостаточно прав)
-  - 404 Not Found - Ресурс не найден
-  - 409 Conflict - Конфликт данных (например, дублирование)
-  - 500 Internal Server Error - Внутренняя ошибка сервера
+#### `PUT /vehicle/{id}`
+  - **Description**: Vehicle Upgrade
+  - **Required roles**: USER, OPERATOR, ADMIN
 
-  # Возможные направления развития
-  - реализация refresh-токенов;
-  - пагинация и фильтрация данных;
-  - контейнеризация приложения с использованием Docker Compose;
+#### `DELETE /vehicle/{id}`
+  - **Description**: Vehicle Removal
+  - **Required roles**: USER, ADMIN
+
+#### `GET/vehicle/user/{userId}`
+  - **Description**: Getting user's vehicles
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+## Parking areas (`/ParkingLot`)
+
+#### `GET /ParkingLot`
+  - **Description**: Getting a list of all parking areas
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `GET /ParkingLot/{id}`
+  - **Description**: Getting a parking area by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `POST /ParkingLot`
+  - **Description**: Creating a new parking area
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `POST /ParkingLot/with-spots`
+  - **Description**: Creating a parking area with spaces
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PUT /ParkingLot/{id}`
+  - **Description**: Updating the parking area
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PATCH /ParkingLot/{id}/status`
+  - **Description**: Changing the status of the parking area
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `DELETE /ParkingLot/{id}`
+  - **Description**: Removing a parking area
+  - **Required roles**: ADMIN
+
+#### `GET /ParkingLot/{id}/spots/available`
+  - **Description**: Getting available parking spaces
+  - **Required roles**: USER, OPERATOR, ADMIN
+  
+#### `GET /parkingLot/{id}/dashboard`
+  - **Description**: Getting a parking dashboard
+  - **Required Roles**: OPERATOR, ADMIN
+
+## Parking Spaces (`/spot`)
+
+#### `GET /spot`
+  - **Description**: Getting a list of all parking spaces
+- **Required roles**: USER, OPERATOR, ADMIN
+
+#### `GET/spot/{id}`
+  - **Description**: Getting a parking space by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `POST /spot`
+  - **Description**: Creating a new parking space
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PUT /spot/{id}`
+  - **Description**: Parking Space Upgrade
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PATCH /spot/{id}/status`
+  - **Description**: Changing the status of a parking space
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `DELETE /spot/{id}`
+  - **Description**: Removing a parking space
+  - **Required roles**: ADMIN
+
+#### `GET /spot/ParkingLot/{parkingLotId}`
+  - **Description**: Getting places of a certain parking area
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+## Tariffs (`/tariff`)
+
+#### `GET /tariff`
+  - **Description**: Getting a list of all tariffs
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `GET /tariff/{id}`
+  - **Description**: Getting a tariff by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `POST/tariff`
+  - **Description**: Creating a new tariff
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `PUT /tariff/{id}`
+  - **Description**: Tariff update
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `DELETE /tariff/{id}`
+  - **Description**: Tariff Removal
+  - **Required roles**: ADMIN
+
+## Reservations (`/reservation`)
+
+#### `GET /reservation`
+  - **Description**: Getting a list of all bookings
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `GET /reservation/{id}`
+  - **Description**: Getting a reservation by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `POST /reservation`
+  - **Description**: Creating a new reservation
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `PUT /reservation/{id}`
+  - **Description**: Booking Update
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `PATCH/reservation/{id}/status`
+  - **Description**: Reservation status change
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `DELETE /reservation/{id}`
+  - **Description**: Deleting a reservation
+  - **Required roles**: ADMIN
+
+#### `POST /reservation/{id}/cancel`
+  - **Description**: Cancellation of reservations
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `GET/reservation/vehicle/{VehicleId}`
+  - **Description**: Receiving vehicle bookings
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `GET /reservation/spot/{spotId}`
+  - **Description**: Receiving parking reservations
+  - **Required roles**: OPERATOR, ADMIN
+
+## Parking sessions (`/parkingSession`)
+
+#### `GET /parkingSession`
+  - **Description**: Getting a list of all parking sessions
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `GET /parkingSession/{id}`
+  - **Description**: Getting a parking session by ID
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+#### `POST /parkingSession`
+  - **Description**: Creating a new parking session
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `POST /parkingSession/from-reservation/{ReservationId}`
+  - **Description**: Creating a parking session from a reservation
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `POST /parkingSession/{id}/finish`
+  - **Description**: End of parking session
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `DELETE /parkingSession/{id}`
+  - **Description**: Deleting a parking session
+  - **Required roles**: ADMIN
+
+#### `GET /parkingSession/spot/{spotId}`
+  - **Description**: Getting parking sessions of a place
+  - **Required roles**: OPERATOR, ADMIN
+
+#### `GET/parkingSession/vehicle/{VehicleId}`
+  - **Description**: Getting vehicle parking sessions
+  - **Required roles**: USER, OPERATOR, ADMIN
+
+  ## Response codes
+  Code Description
+  - 200 OK - The request was completed successfully
+  - 201 Created - The resource was created successfully
+  - 204 No Content - The request was completed, but the response body is missing
+  - 400 Bad Request - Invalid request parameters
+  - 401 Unauthorized - Authentication required
+  - 403 Forbidden - Access denied (insufficient rights)
+  - 404 Not Found - Resource not found
+  - 409 Conflict - Data conflict (e.g. duplication)
+  - 500 Internal Server Error - Internal Server Error
+
+  # Possible development directions
+  - implementation of refresh tokens;
+  - pagination and filtering of data;
+  - containerization of the application using Docker Compose;
