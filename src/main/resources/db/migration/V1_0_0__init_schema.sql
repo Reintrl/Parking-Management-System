@@ -1,34 +1,34 @@
 create sequence public.parking_lots_id_seq;
 
-alter sequence public.parking_lots_id_seq owner to asei;
+alter sequence public.parking_lots_id_seq owner to ${DB_USER};
 
 create sequence public.parking_sessions_id_seq;
 
-alter sequence public.parking_sessions_id_seq owner to asei;
+alter sequence public.parking_sessions_id_seq owner to ${DB_USER};
 
 create sequence public.reservations_id_seq;
 
-alter sequence public.reservations_id_seq owner to asei;
+alter sequence public.reservations_id_seq owner to ${DB_USER};
 
 create sequence public.spots_id_seq;
 
-alter sequence public.spots_id_seq owner to asei;
+alter sequence public.spots_id_seq owner to ${DB_USER};
 
 create sequence public.tariffs_id_seq;
 
-alter sequence public.tariffs_id_seq owner to asei;
+alter sequence public.tariffs_id_seq owner to ${DB_USER};
 
 create sequence public.users_id_seq;
 
-alter sequence public.users_id_seq owner to asei;
+alter sequence public.users_id_seq owner to ${DB_USER};
 
 create sequence public.vehicles_id_seq;
 
-alter sequence public.vehicles_id_seq owner to asei;
+alter sequence public.vehicles_id_seq owner to ${DB_USER};
 
 create sequence public.security_id_seq;
 
-alter sequence public.security_id_seq owner to asei;
+alter sequence public.security_id_seq owner to ${DB_USER};
 
 
 
@@ -54,7 +54,7 @@ create table if not exists public.tariffs
     );
 
 alter table public.tariffs
-    owner to asei;
+    owner to ${DB_USER};
 
 create table if not exists public.parking_lots
 (
@@ -75,7 +75,7 @@ create table if not exists public.parking_lots
     );
 
 alter table public.parking_lots
-    owner to asei;
+    owner to ${DB_USER};
 
 create table if not exists public.spots
 (
@@ -103,7 +103,7 @@ create table if not exists public.spots
     );
 
 alter table public.spots
-    owner to asei;
+    owner to ${DB_USER};
 
 create unique index if not exists uk_spots_parking_lot_number
     on public.spots (parking_lot_id, number);
@@ -128,7 +128,7 @@ create table if not exists public.users
     );
 
 alter table public.users
-    owner to asei;
+    owner to ${DB_USER};
 
 create table if not exists public.vehicles
 (
@@ -148,7 +148,7 @@ create table if not exists public.vehicles
     );
 
 alter table public.vehicles
-    owner to asei;
+    owner to ${DB_USER};
 
 create table if not exists public.reservations
 (
@@ -171,7 +171,7 @@ create table if not exists public.reservations
     );
 
 alter table public.reservations
-    owner to asei;
+    owner to ${DB_USER};
 
 create table if not exists public.parking_sessions
 (
@@ -197,7 +197,7 @@ create table if not exists public.parking_sessions
     );
 
 alter table public.parking_sessions
-    owner to asei;
+    owner to ${DB_USER};
 
 create index if not exists ix_sessions_spot_status
     on public.parking_sessions (spot_id, status);
@@ -219,5 +219,5 @@ create table if not exists public.security
     );
 
 alter table public.security
-    owner to asei;
+    owner to ${DB_USER};
 
